@@ -9,21 +9,25 @@
    See these sources for detailed information regarding the
    Active Template Library product.
 -->
+<!DOCTYPE html>
 <html>
-	<body bgcolor="{{GetBodyColor}}">
-		<H1 align="left">
-			ATL Server Stencil Cache Management
-		</H1>
-		<table border="1" width="50%">
-			<tr bgcolor="{{GetTRColor}}">
-				<th align="center">
-					Value</th><th align="center">Quantity</th></tr>
+    <head>
+        <title>ATL Server Stencil Cache Management</title>
+        <style>
+            body { background-color:{{GetBodyColor}}; }
+            h1 { text-align:left; }
+            table { border-width:1px; width:50%; }
+            tr { background-color:{{GetTRColor}}; }
+            th { text-align:center; }
+        </style>
+    </head>
+	<body>
+		<h1>ATL Server Stencil Cache Management</h1>
+		<table>
+			<tr><th>Value</th><th>Quantity</th></tr>
 			{{while GetNextStencilCacheStats}}
-			<tr bgcolor="{{GetTRColor}}">
-				<td>{{GetCacheValue}}</td>
-				<td>{{GetCacheQuantity}}</td>
-			</tr>
-			{{endwhile}}
+    		<tr><td>{{GetCacheValue}}</td><td>{{GetCacheQuantity}}</td></tr>
+	    	{{endwhile}}
 		</table>
 		<form method="post">
 			<input type="hidden" name="Handler" value="StencilMgrSrf"> <input type="hidden" name="Method" value="ExecuteCommand">
@@ -34,36 +38,32 @@
 				<option value="3">Set default Lifespan</option>
 			</select>
 			<br>
-			<span id="DynValueCap"></span><input type="text" name="DynValue" style="visibility=hidden">
+			<span id="DynValueCap"></span><input type="text" id="DynValue" name="DynValue" style="visibility:hidden">
 			<br>
 			<input type="submit" value="Execute Command">
 		</form>
-		<script language="JavaScript">
+		<script>
 function HandleFormOnChange(select_object)
 {
+    var vis = "visible";
+    var txt = "";
 
 	//alert(select_object.form.elements["StencilName"].type);
+    switch (select_object.options[select_object.selectedIndex].value)
+    {
+        case '1':
+            txt = "Stencil Name:&nbsp;";
+            break;
+        case '3':
+            txt = "New Lifetime:&nbsp;";
+            break;
+        default:
+            vis = "hidden";
+    }
 
-	if (select_object.value==1)
-	{
-		select_object.form.elements["DynValue"].style.visibility="visible";
-		window.document.all["DynValueCap"].innerHTML = "Stencil Name:&nbsp;";
-
-	}
-	else if (select_object.value==3)
-	{
-		select_object.form.elements["DynValue"].style.visibility="visible";
-		window.document.all["DynValueCap"].innerHTML = "New Lifetime:&nbsp;";
-	}
-	else
-	{
-		select_object.form.elements["DynValue"].style.visibility="hidden";
-		window.document.all["DynValueCap"].innerHTML="";
-	}
+    document.getElementById("DynValue").style.visibility = vis;
+    document.getElementById("DynValueCap").innerHTML = txt;
 }
-
-
-
 		</script>
 	</body>
 </html>
