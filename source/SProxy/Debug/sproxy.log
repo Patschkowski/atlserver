@@ -1,4 +1,7 @@
-﻿  sproxy.cpp
+﻿  AttributeParser.cpp
+  CodeTypeBuilder.cpp
+  ComplexType.cpp
+  Generating Code...
 AttributeParser.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/SAFESEH' specification
 AttributeParser.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
 CodeTypeBuilder.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes

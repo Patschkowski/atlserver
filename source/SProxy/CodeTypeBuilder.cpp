@@ -166,7 +166,7 @@ HRESULT CCodeTypeBuilder::ProcessService(CWSDLService *pSvc)
             if (pSvc->GetName().GetLength() != 0)
             {
                 CString strClassName;
-                strClassName.Append("C", 1);
+                strClassName.Append(TEXT("C"), 1);
                 strClassName+= pSvc->GetName();
 
                 if (FAILED(m_pProxy->SetClassName(strClassName)))
