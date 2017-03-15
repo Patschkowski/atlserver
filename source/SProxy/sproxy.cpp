@@ -95,11 +95,18 @@ HRESULT GetUserDefaultUILanguageLegacyCompat(LANGID* pLangid)
 	} else
 	{
 		// We're not on an MUI-capable system.
+#if 0
 		OSVERSIONINFO version;
 		memset(&version, 0, sizeof(version));
 		version.dwOSVersionInfoSize = sizeof(version);
 		::GetVersionEx(&version);
 		if( version.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS)
+#else
+		OSVERSIONINFOEX versionEx;
+		memset(&versionEx, 0, sizeof versionEx);
+		versionEx.dwPlatformId = VER_PLATFORM_WIN32_WINDOWS;
+		if (VerifyVersionInfo(&versionEx, VER_PLATFORMID, VerSetConditionMask(0, VER_PLATFORMID, VER_EQUAL)))
+#endif
 		{
 			// We're on Windows 9x, so look in the registry for the UI language
 			HKEY hKey = NULL;
@@ -637,9 +644,9 @@ int sproxy()
 					(hr == E_SAX_PATHNOTFOUND) ||
 					(hr == E_SAX_ACCESSDENIED))
 				{
-					EmitError(IDS_SDL_FAILED_DM_OPEN, wszUrl);
+					EmitError(IDS_SDL_FAILED_DM_OPEN, static_cast<LPCWSTR>(wszUrl));
 				}
-				EmitError(IDS_SDL_PROCESS_DM_FAILURE, wszUrl);
+				EmitError(IDS_SDL_PROCESS_DM_FAILURE, static_cast<LPCWSTR>(wszUrl));
 				return 1;
 			}
 		}
@@ -717,9 +724,9 @@ int sproxy()
 			    (hr == E_SAX_PATHNOTFOUND) ||
 			    (hr == E_SAX_ACCESSDENIED))
 			{
-				EmitError(IDS_SDL_FAILED_WSDL_OPEN, g_wszFile);
+				EmitError(IDS_SDL_FAILED_WSDL_OPEN, static_cast<LPCWSTR>(g_wszFile));
 			}
-			EmitError(IDS_SDL_PROCESS_FAILURE, g_wszFile);
+			EmitError(IDS_SDL_PROCESS_FAILURE, static_cast<LPCWSTR>(g_wszFile));
 			return 1;
 		}
 
@@ -747,7 +754,7 @@ int sproxy()
 			wszOut.Append(L".h", 2);
 		}
 
-		Emit(IDS_SDL_SUCCESS, wszOut);
+		Emit(IDS_SDL_SUCCESS, static_cast<LPCWSTR>(wszOut));
 		CComObjectStack<CCppCodeGenerator> gen;
 		hr = gen.Generate(wszOut, &proxy, 
 				(nFlags & SPROXYFLAG_NOPRAGMA) ? false : true, 

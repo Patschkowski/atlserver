@@ -35,18 +35,18 @@ CWSDLBinding * CWSDLPort::GetBinding()
 					if (m_pBinding == NULL)
 					{
 						EmitFileError(IDS_SDL_UNRESOLVED_ELEM2, const_cast<CWSDLPort *>(this), 0,
-							"binding", strUri, m_binding.GetName());
+							"binding", static_cast<LPCWSTR>(strUri), static_cast<LPCWSTR>(m_binding.GetName()));
 					}
 				}
 			}
 			else
 			{
-				EmitFileError(IDS_SDL_UNRESOLVED_ELEM2, const_cast<CWSDLPort *>(this), 0, "binding", strUri, m_binding.GetName());
+				EmitFileError(IDS_SDL_UNRESOLVED_ELEM2, const_cast<CWSDLPort *>(this), 0, "binding", static_cast<LPCWSTR>(strUri), static_cast<LPCWSTR>(m_binding.GetName()));
 			}
 		}
 		else
 		{
-			EmitFileError(IDS_SDL_UNRESOLVED_NAMESPACE, const_cast<CWSDLPort *>(this), 0, m_binding.GetPrefix());
+			EmitFileError(IDS_SDL_UNRESOLVED_NAMESPACE, const_cast<CWSDLPort *>(this), 0, static_cast<LPCWSTR>(m_binding.GetPrefix()));
 		}
 	}
 

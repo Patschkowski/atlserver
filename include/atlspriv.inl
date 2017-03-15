@@ -92,7 +92,7 @@ inline bool ZEvtSyncSocket::Create(int af, int st, int proto, WORD wFlags)
 		return false; // Must close this socket first
 	}
 
-	m_socket = WSASocket(af, st, proto, NULL, 0,
+	m_socket = WSASocketW(af, st, proto, NULL, 0,
 		wFlags | m_dwCreateFlags);
 	if (m_socket == INVALID_SOCKET)
 	{

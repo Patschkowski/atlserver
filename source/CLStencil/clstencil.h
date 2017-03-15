@@ -16,7 +16,7 @@
 ATL_NOINLINE inline void GetHrErrorDescription(HRESULT hr, CString& strErr) throw()
 {
 	LPTSTR pszMsg = NULL;
-	::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM, NULL, hr, 0, (LPSTR)&pszMsg, 0, NULL);
+	::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM, NULL, hr, 0, (LPTSTR)&pszMsg, 0, NULL);
 	strErr+= pszMsg;
 	::LocalFree(pszMsg);
 }
@@ -165,19 +165,19 @@ public:
 		}
 		else
 		{
-			hr = m_OutFile.Create(szFileName, GENERIC_WRITE, FILE_SHARE_READ, CREATE_ALWAYS);
+			hr = m_OutFile.Create(CA2T(szFileName), GENERIC_WRITE, FILE_SHARE_READ, CREATE_ALWAYS);
 		}
 		
 		if (hr != S_OK)
 		{
-			m_strErr.Format("ERROR: %s : ", szFileName ? szFileName : "stdout");
+			m_strErr.Format(TEXT("ERROR: %s : "), szFileName ? static_cast<LPCTSTR>(CA2T(szFileName)) : TEXT("stdout"));
 			GetHrErrorDescription(hr, m_strErr);
 			return hr;
 		}
 
 		if (szErrLog)
 		{
-			hr = m_ErrFile.Create(szErrLog, GENERIC_WRITE, FILE_SHARE_READ, CREATE_ALWAYS);
+			hr = m_ErrFile.Create(CA2T(szErrLog), GENERIC_WRITE, FILE_SHARE_READ, CREATE_ALWAYS);
 		}
 		else
 		{
@@ -193,7 +193,7 @@ public:
 		}
 		if (hr != S_OK)
 		{
-			m_strErr.Format("ERROR: %s : ", szErrLog ? szErrLog : "stderr");
+			m_strErr.Format(TEXT("ERROR: %s : "), szErrLog ? static_cast<LPCTSTR>(CA2T(szErrLog)) : TEXT("stderr"));
 			GetHrErrorDescription(hr, m_strErr);
 			CloseFiles();
 			return hr;
@@ -201,7 +201,7 @@ public:
 
 		if (szFormFile)
 		{
-			hr = m_InFile.Create(szFormFile, GENERIC_READ, FILE_SHARE_READ, OPEN_ALWAYS);
+			hr = m_InFile.Create(CA2T(szFormFile), GENERIC_READ, FILE_SHARE_READ, OPEN_ALWAYS);
 		}
 		else
 		{
@@ -217,7 +217,7 @@ public:
 		}
 		if (hr != S_OK)
 		{
-			m_strErr.Format("ERROR: %s : ", szFormFile ? szFormFile : "stdin");
+			m_strErr.Format(TEXT("ERROR: %s : "), szFormFile ? static_cast<LPCTSTR>(CA2T(szFormFile)) : TEXT("stdin"));
 			GetHrErrorDescription(hr, m_strErr);
 			CloseFiles();
 			return hr;
@@ -876,13 +876,13 @@ public:
 
             if (!szFileName)
 			{
-				m_strErr.Format("ERROR: Invalid file: %s", szFile);
+				m_strErr.Format(TEXT("ERROR: Invalid file: %s"), szFile);
 				RequestComplete(pRequestInfo, 500, 8);
 				return FALSE;
 			}
 
 			LPCSTR szDot = szFileName + strlen(szFileName)-4;
-			if (_tcsicmp(szDot, c_AtlSRFExtension) == 0)
+			if (_stricmp(szDot, c_AtlSRFExtension) == 0)
 			{
 				pRequestInfo->dwRequestType = ATLSRV_REQUEST_STENCIL;
 			    hcErr = LoadDispatchFile(szFileName, pRequestInfo);
@@ -900,11 +900,11 @@ public:
 			if (hcErr)
 			{
 				if (hcErr == HTTP_ERROR(500, ISE_SUBERR_BADSRF))
-					m_strErr.Format("ERROR: Invalid SRF file: %s", szFile);
+					m_strErr.Format(TEXT("ERROR: Invalid SRF file: %s"), szFile);
 				else if (hcErr == HTTP_ERROR(500, ISE_SUBERR_READFILEFAIL))
-					m_strErr.Format("ERROR: Failed to read SRF file: %s", szFile);
+					m_strErr.Format(TEXT("ERROR: Failed to read SRF file: %s"), szFile);
 				else if (hcErr == HTTP_ERROR(500, ISE_SUBERR_UNEXPECTED))
-					m_strErr = "ERROR: Unexpected Error Loading DLL";
+					m_strErr = TEXT("ERROR: Unexpected Error Loading DLL");
 				RequestComplete(pRequestInfo, HTTP_ERROR_CODE(hcErr), HTTP_SUBERROR_CODE(hcErr));
 				return FALSE;
 			}

@@ -10,7 +10,7 @@ class CDepSettings
 {
 public:
 	CDepSettings();
-	unsigned int Load(LPCSTR szSettingsPath);
+	unsigned int Load(LPCTSTR szSettingsPath);
 	HRESULT GetHostList(IXMLDOMNodeList **ppList);
 	HRESULT GetAppMappingList(IXMLDOMNodeList **ppList);
 	HRESULT GetFileGroups(IXMLDOMNodeList **ppList);

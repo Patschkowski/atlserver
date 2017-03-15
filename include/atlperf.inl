@@ -1870,7 +1870,7 @@ inline HRESULT CPerfMon::Initialize() throw()
 
 		// create a mutex to handle syncronizing access to the shared memory area
 		CString strMutexName;
-		strMutexName.Format(_T("Global\\ATLPERF_%s_LOCK"), strAppName);
+		strMutexName.Format(_T("Global\\ATLPERF_%s_LOCK"), static_cast<LPCTSTR>(strAppName));
 		tempLock.Create(&sa, FALSE, strMutexName);
 		if (tempLock.m_h == NULL)
 			return AtlHresultFromLastError();
@@ -2418,7 +2418,7 @@ ATL_NOINLINE inline HRESULT CPerfMon::PersistToXML(IStream *pStream, BOOL bFirst
 			return hr;
 	}
 
-	strXML.Format("\t<perfmon name=\"%s\">\r\n", CT2CA(GetAppName()));
+	strXML.Format("\t<perfmon name=\"%s\">\r\n", static_cast<LPCSTR>(CT2CA(GetAppName())));
 	hr = pStream->Write(strXML, strXML.GetLength(), &nLen);
 
 	for (UINT i=0; i<_GetNumCategories(); i++)
@@ -2453,7 +2453,7 @@ ATL_NOINLINE inline HRESULT CPerfMon::PersistToXML(IStream *pStream, BOOL bFirst
 					nLength = AtlUnicodeToUTF8(wszInstNameSrc, nInstLen, szUTF8, nLength);
 					szUTF8[nLength] = '\0';
 
-					strXML.Format("\t\t\t<instance name=\"%s\" id=\"%d\">\r\n", szUTF8, pInstance->m_dwInstance);
+					strXML.Format("\t\t\t<instance name=\"%s\" id=\"%d\">\r\n", static_cast<CHAR*>(szUTF8), pInstance->m_dwInstance);
 					hr = pStream->Write(strXML, strXML.GetLength(), &nLen);
 					if (hr != S_OK)
 						return hr;
@@ -2493,7 +2493,7 @@ ATL_NOINLINE inline HRESULT CPerfMon::PersistToXML(IStream *pStream, BOOL bFirst
 								nLen = AtlUnicodeToUTF8(LPCWSTR(pSrc), nTextLen, szUTF8, nLen);	
 								szUTF8[nLen] = '\0';
 								strXML.Format("\t\t\t\t<counter type=\"perf_size_variable_len_unicode\" value=\"%s\" offset=\"%d\"/>\r\n",
-										szUTF8,
+										static_cast<CHAR*>(szUTF8),
 										pCounterInfo->m_nDataOffset);
 							}
 							else
@@ -2503,7 +2503,7 @@ ATL_NOINLINE inline HRESULT CPerfMon::PersistToXML(IStream *pStream, BOOL bFirst
 									return E_OUTOFMEMORY;
 								Checked::strcpy_s(szUTF8, nTextLen+1, LPCSTR(pSrc));
 								strXML.Format("\t\t\t\t<counter type=\"perf_size_variable_len_ansi\" value=\"%s\" offset=\"%d\"/>\r\n",
-										szUTF8,
+										static_cast<CHAR*>(szUTF8),
 										pCounterInfo->m_nDataOffset);
 							}
 							break;

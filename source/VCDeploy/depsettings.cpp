@@ -47,7 +47,7 @@ HRESULT CDepSettings::GetFileGroups(IXMLDOMNodeList **ppList)
 	return E_FAIL;
 }
 
-unsigned int CDepSettings::Load(LPCSTR szSettingsPath)
+unsigned int CDepSettings::Load(LPCTSTR szSettingsPath)
 {
 	HRESULT hr = E_FAIL;
 	
@@ -268,9 +268,9 @@ unsigned int CDepSettings::Load(LPCSTR szSettingsPath)
 #ifdef _DEBUG
 	// dump the settings
 	printf("loaded settings:\n");
-	printf("Virtual directory name: %s\n", m_strVirtDirName);
-	printf("Virtual directory fs path: %s\n", m_strVirtDirFSPath);
-	printf("Virtual directory isapi extension name: %s\n",m_strExtFileName);
+	printf("Virtual directory name: %s\n", static_cast<LPCSTR>(CT2A(m_strVirtDirName)));
+	printf("Virtual directory fs path: %s\n", static_cast<LPCSTR>(CT2A(m_strVirtDirFSPath)));
+	printf("Virtual directory isapi extension name: %s\n", static_cast<LPCSTR>(CT2A(m_strExtFileName)));
 	printf("Do not create virtual directory: %s\n", m_bDoNotCreateVirtDir ? "true" : "false");
 	printf("Register ISAPI: %s\n", m_bRegIsapi ? "true" : "false");
 	printf("Unload before copy: %s\n", m_bUnloadBeforeCopy ? "true" : "false");

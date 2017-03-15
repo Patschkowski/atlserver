@@ -315,7 +315,7 @@ public:
 		m_bShowUsage = false;
 	}
 
-	bool Parse(int argc, char* argv[])
+	bool Parse(int argc, TCHAR* argv[])
 	{
 		if (argc < 2)
 		{
@@ -346,9 +346,9 @@ public:
 		if (!pArg || *pArg == _T('\0'))
 			return;
 
-		if (!_tcsicmp(pArg, "nologo"))
+		if (!_tcsicmp(pArg, TEXT("nologo")))
 			m_bNoLogo = true;
-		if (!_tcsicmp(pArg, "?"))
+		if (!_tcsicmp(pArg, TEXT("?")))
 			m_bShowUsage = true;
 	}
 

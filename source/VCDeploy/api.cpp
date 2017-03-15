@@ -148,9 +148,9 @@ HRESULT RemoveApplicationDependencyUponGroup(WCHAR* wszRootWeb6, LPWSTR lpwszApp
     return hrRet;
 }
 
-LPSTR _ReverseFind(LPSTR szStr, size_t nLen, char ch)
+LPTSTR _ReverseFind(LPTSTR szStr, size_t nLen, TCHAR ch)
 {
-	LPSTR sz = szStr+nLen;
+	LPTSTR sz = szStr+nLen;
 	while (sz >= szStr)
 	{
 		if (*sz == ch)
@@ -163,15 +163,15 @@ LPSTR _ReverseFind(LPSTR szStr, size_t nLen, char ch)
 	return NULL;
 }
 
-BOOL RecursiveCreateDirectoryHelper(LPSTR szPath, size_t nLen)
+BOOL RecursiveCreateDirectoryHelper(LPTSTR szPath, size_t nLen)
 {
 	WIN32_FILE_ATTRIBUTE_DATA fad;
 	BOOL bRet;
-	LPSTR szCurrent;
-	char chTmp;
+	LPTSTR szCurrent;
+	TCHAR chTmp;
 
 	memset(&fad, 0x00, sizeof(fad));
-	bRet = ::GetFileAttributesExA(szPath, GetFileExInfoStandard, &fad);
+	bRet = ::GetFileAttributesEx(szPath, GetFileExInfoStandard, &fad);
 	if (!bRet)
 	{
 		if ((GetLastError() == ERROR_PATH_NOT_FOUND) ||
@@ -204,18 +204,18 @@ BOOL RecursiveCreateDirectoryHelper(LPSTR szPath, size_t nLen)
 	return TRUE;
 }
 
-BOOL RecursiveCreateDirectory(LPCSTR szDir)
+BOOL RecursiveCreateDirectory(LPCTSTR szDir)
 {
-	char szPath[MAX_PATH];
+	TCHAR szPath[MAX_PATH];
 	size_t nLen;
 
-	nLen = strlen(szDir);
+	nLen = _tcsclen(szDir);
 	if (nLen >= MAX_PATH)
 	{
 		SetLastError(ERROR_BUFFER_OVERFLOW);
 		return FALSE;
 	}
-	memcpy(szPath, szDir, nLen);
+	memcpy(szPath, szDir, nLen * sizeof(TCHAR));
 	szPath[nLen] = '\0';
 
 	return RecursiveCreateDirectoryHelper(szPath, nLen);
@@ -287,7 +287,7 @@ int PrintMessage(LPCTSTR szPrefix, unsigned int nMsgID, LPCTSTR szExtraInfo)
 {
 	CString strMsg;
 	if (!LoadStringFromModule(nMsgID, strMsg))
-		_tprintf("Failed to load error string %x\n", nMsgID);
+		_tprintf(TEXT("Failed to load error string %x\n"), nMsgID);
 	else
 	{
 		return PrintMessage(szPrefix, (LPCTSTR)strMsg, szExtraInfo);
@@ -298,9 +298,9 @@ int PrintMessage(LPCTSTR szPrefix, unsigned int nMsgID, LPCTSTR szExtraInfo)
 int PrintMessage(LPCTSTR szPrefix, LPCTSTR szMsg, LPCTSTR szExtraInfo)
 {
 	if (szExtraInfo)
-		_tprintf("vcdeploy : %s %s %s.\n", szPrefix, szMsg, szExtraInfo);
+		_tprintf(TEXT("vcdeploy : %s %s %s.\n"), szPrefix, szMsg, szExtraInfo);
 	else
-		_tprintf("vcdeploy : %s %s\n", szPrefix, szMsg);
+		_tprintf(TEXT("vcdeploy : %s %s\n"), szPrefix, szMsg);
 
 	return ATLSDPLY_SUCCESS;
 }
@@ -309,10 +309,10 @@ int PrintMessage(unsigned int nMsgID)
 {
 	CString strMsg;
 	if (!LoadStringFromModule(nMsgID, strMsg))
-		_tprintf("Failed to load error string %x\n", nMsgID);
+		_tprintf(TEXT("Failed to load error string %x\n"), nMsgID);
 	else
 	{
-		_tprintf("%s\n", static_cast<const char *>(strMsg));
+		_tprintf(TEXT("%s\n"), static_cast<LPCTSTR>(strMsg));
 	}
 	return 0;
 }
@@ -948,9 +948,9 @@ int SetRootAppMappings(	CADSIHelper *pAdsHelper,
 
 #ifdef _DEBUG
 		CString strOut;
-		strOut.Format("Adding mapping %s\n",CW2A(strEntry));
-		printf(strOut);
-		ATLTRACE(L"Adding script mapping %s\n", strEntry);
+		strOut.Format(TEXT("Adding mapping %s\n"), static_cast<LPCTSTR>(CW2T(strEntry)));
+		printf(CT2A(strOut));
+		ATLTRACE(TEXT("Adding script mapping %s\n"), static_cast<LPCTSTR>(CW2T(strEntry)));
 #endif
 	}
 
@@ -1261,7 +1261,7 @@ int UpdateFileSystem(CDepSettings *pSettings)
 						dwAttrs &= ~FILE_ATTRIBUTE_READONLY;
 						if (!SetFileAttributes(vrDestPath, dwAttrs))
 						{
-							ATLTRACE(_T("Failed to remove readonly attribute of target file %s\n"), vrDestPath);
+							ATLTRACE(_T("Failed to remove readonly attribute of target file %s\n"), static_cast<LPCTSTR>(vrDestPath));
 						}
 					}
 				}
@@ -1318,7 +1318,7 @@ int RegisterExtension(CADSIHelper* /*pAdsHelper*/,
 	if (!hInstExtension)
 		return IDS_ERR_REGISTERING_EXTENSION;
 
-	PFNRegisterServer pfnRegister = (PFNRegisterServer)GetProcAddress(hInstExtension, _T("DllRegisterServer"));
+	PFNRegisterServer pfnRegister = (PFNRegisterServer)GetProcAddress(hInstExtension, "DllRegisterServer");
 	if (pfnRegister)
 	{
 		if (S_OK == pfnRegister())

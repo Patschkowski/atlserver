@@ -5,3 +5,8 @@
 /source/CLStencil/.vs/clstencil/v15
 /source/SProxy/.vs/sproxy/v15
 /source/VCDeploy/.vs/vcdeploy/v15
+/.vs
+/source/CLStencil/Debug
+/source/VCDeploy/Debug
+/source/Debug
+/source/SProxy/Debug

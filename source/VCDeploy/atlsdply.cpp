@@ -15,7 +15,7 @@
 __inline
 errno_t __cdecl DuplicateEnvString(TCHAR **_PBuffer, size_t *_PBufferSizeInBytes, const TCHAR *_VarName)
 {	
-    char *str;
+    TCHAR *str;
     size_t size;
 
     /* validation section */
@@ -29,7 +29,7 @@ errno_t __cdecl DuplicateEnvString(TCHAR **_PBuffer, size_t *_PBufferSizeInBytes
 
     __pragma(warning(push))
     __pragma(warning(disable:4996))
-    str = getenv(_VarName);
+    str = CA2T(getenv(CT2A(_VarName)));
     __pragma(warning(pop))
     if (str == NULL)
     {
@@ -37,7 +37,7 @@ errno_t __cdecl DuplicateEnvString(TCHAR **_PBuffer, size_t *_PBufferSizeInBytes
     }
 
     size = _tcslen(str) + 1;
-    *_PBuffer = (char*)malloc(size * sizeof(TCHAR));
+    *_PBuffer = (TCHAR*)malloc(size * sizeof(TCHAR));
     if (*_PBuffer == NULL)
     {
         return ENOMEM;

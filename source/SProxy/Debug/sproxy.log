@@ -1,0 +1,42 @@
+﻿  sproxy.cpp
+AttributeParser.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/SAFESEH' specification
+AttributeParser.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+CodeTypeBuilder.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+ComplexType.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+ComplexTypeParser.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+Content.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+ContentParser.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+CppCodeGenerator.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+DiscoMapDocument.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+DiscoMapParser.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+Element.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+ElementParser.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+Emit.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+ErrorHandler.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+Parser.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+QName.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+Schema.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+SchemaParser.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+SimpleTypeParser.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+sproxy.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+StdAfx.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+Util.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+WSDLBinding.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+WSDLBindingParser.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+WSDLMessageParser.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+WSDLMessagePart.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+WSDLOperationIOParser.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+WSDLOperationParser.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+WSDLParser.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+WSDLPort.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+WSDLPortTypeIO.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+WSDLPortTypeParser.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+WSDLServiceParser.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+WSDLServicePortParser.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+WSDLSoapElement.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+WSDLTypesParser.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+XMLDocParser.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+XMLDocument.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+XMLElement.obj : warning LNK4254: section 'ATLS' (50000040) merged into '.rdata' (40000040) with different attributes
+  sproxy.vcxproj -> C:\Users\felix\Source\Repos\atlserver\source\SProxy\Debug\sproxy.exe
+  sproxy.vcxproj -> Debug\sproxy.pdb (Full PDB)

@@ -90,11 +90,18 @@ HRESULT GetUserDefaultUILanguageLegacyCompat(LANGID* pLangid)
 	} else
 	{
 		// We're not on an MUI-capable system.
+#if 0
 		OSVERSIONINFO version;
 		memset(&version, 0, sizeof(version));
 		version.dwOSVersionInfoSize = sizeof(version);
 		::GetVersionEx(&version);
 		if( version.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS)
+#else
+		OSVERSIONINFOEX versionEx;
+		memset(&versionEx, 0, sizeof versionEx);
+		versionEx.dwPlatformId = VER_PLATFORM_WIN32_WINDOWS;
+		if (VerifyVersionInfo(&versionEx, VER_PLATFORMID, VerSetConditionMask(0, VER_PLATFORMID, VER_EQUAL)))
+#endif
 		{
 			// We're on Windows 9x, so look in the registry for the UI language
 			HKEY hKey = NULL;
@@ -446,24 +453,24 @@ CComModule _Module;
 
 void PrintUsage(LPCSTR lpszErrorText=NULL);
 bool GetParameters(int argc, char *argv[], 
-				   LPTSTR *ppszInputFile, 
-				   LPTSTR *ppszOutputFile, 
-				   LPTSTR *ppszQueryString,
-				   LPTSTR *ppszFormInput, 
-				   LPTSTR *ppszErrorLog,
-				   LPTSTR *ppszContentType,
-				   LPTSTR *ppszVerb,
+				   LPSTR *ppszInputFile, 
+				   LPSTR *ppszOutputFile, 
+				   LPSTR *ppszQueryString,
+				   LPSTR *ppszFormInput, 
+				   LPSTR *ppszErrorLog,
+				   LPSTR *ppszContentType,
+				   LPSTR *ppszVerb,
 				   LPBOOL pbNoLogo);
 
 int main(int argc, char* argv[])
 {
-	LPTSTR szInputFile = NULL;
-	LPTSTR szOutputFile = NULL;
-	LPTSTR szQueryString = NULL;
-	LPTSTR szFormInput = NULL;
-	LPTSTR szErrorLog = NULL;
-	LPTSTR szContentType = NULL;
-	LPTSTR szVerb = NULL;
+	LPSTR szInputFile = NULL;
+	LPSTR szOutputFile = NULL;
+	LPSTR szQueryString = NULL;
+	LPSTR szFormInput = NULL;
+	LPSTR szErrorLog = NULL;
+	LPSTR szContentType = NULL;
+	LPSTR szVerb = NULL;
 	BOOL bNoLogo = FALSE;	
 	HINSTANCE hInstResource=LoadLocResDll(szClStencilUIDll,TRUE);	
 	_AtlBaseModule.AddResourceInstance(hInstResource);
@@ -503,7 +510,7 @@ int main(int argc, char* argv[])
 	}
 
 	if (!extension.DispatchStencilCall(szInputFile, szOutputFile, szQueryString, szErrorLog, szFormInput, szContentType, szVerb))
-		printf("%s\n", (LPCSTR) extension.m_strErr);
+		printf("%s\n", static_cast<LPCSTR>(CT2A(extension.m_strErr)));
 
 	extension.Uninitialize();
 	_Module.Term();
@@ -527,13 +534,13 @@ void PrintUsage(LPCSTR lpszErrorText)
 }
 
 bool GetParameters(int argc, char *argv[], 
-				   LPTSTR *ppszInputFile, 
-				   LPTSTR *ppszOutputFile, 
-				   LPTSTR *ppszQueryString,
-				   LPTSTR *ppszFormInput, 
-				   LPTSTR *ppszErrorLog,
-				   LPTSTR *ppszContentType,
-				   LPTSTR *ppszVerb,
+				   LPSTR *ppszInputFile, 
+				   LPSTR *ppszOutputFile, 
+				   LPSTR *ppszQueryString,
+				   LPSTR *ppszFormInput, 
+				   LPSTR *ppszErrorLog,
+				   LPSTR *ppszContentType,
+				   LPSTR *ppszVerb,
 				   LPBOOL pbNoLogo)
 {
 	for (int i = 1; i < argc; i++)

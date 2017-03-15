@@ -62,38 +62,38 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>Debug\</OutDir>
     <IntDir>Debug\</IntDir>
-    <NMakeBuildCommandLine>nmake /f clstencilui.mak</NMakeBuildCommandLine>
+    <!--<NMakeBuildCommandLine>nmake /f clstencilui.mak</NMakeBuildCommandLine>
     <NMakeReBuildCommandLine>nmake /f clstencilui.mak</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine>nmake /f clstencilui.mak clean</NMakeCleanCommandLine>
     <NMakeOutput>makprj.exe</NMakeOutput>
-    <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>-->
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>x64\$(Configuration)\</OutDir>
     <IntDir>x64\$(Configuration)\</IntDir>
-    <NMakeBuildCommandLine>nmake /f clstencilui.mak TARGET=x64</NMakeBuildCommandLine>
+    <!--<NMakeBuildCommandLine>nmake /f clstencilui.mak TARGET=x64</NMakeBuildCommandLine>
     <NMakeReBuildCommandLine>nmake /f clstencilui.mak TARGET=x64</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine>nmake /f clstencilui.mak clean</NMakeCleanCommandLine>
     <NMakeOutput>makprj.exe</NMakeOutput>
-    <NMakePreprocessorDefinitions>WIN32;_DEBUG;WIN64;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakePreprocessorDefinitions>WIN32;_DEBUG;WIN64;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>-->
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>Release\</OutDir>
     <IntDir>Release\</IntDir>
-    <NMakeBuildCommandLine>nmake /f clstencilui.mak DEBUG=0</NMakeBuildCommandLine>
+    <!--<NMakeBuildCommandLine>nmake /f clstencilui.mak DEBUG=0</NMakeBuildCommandLine>
     <NMakeReBuildCommandLine>nmake /f clstencilui.mak DEBUG=0</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine>nmake /f clstencilui.mak DEBUG=0 clean</NMakeCleanCommandLine>
     <NMakeOutput>makprj.exe</NMakeOutput>
-    <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>-->
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>x64\$(Configuration)\</OutDir>
     <IntDir>x64\$(Configuration)\</IntDir>
-    <NMakeBuildCommandLine>nmake /f clstencilui.mak DEBUG=0 TARGET=x64</NMakeBuildCommandLine>
+    <!--<NMakeBuildCommandLine>nmake /f clstencilui.mak DEBUG=0 TARGET=x64</NMakeBuildCommandLine>
     <NMakeReBuildCommandLine>nmake /f clstencilui.mak DEBUG=0 TARGET=x64</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine>nmake /f clstencilui.mak DEBUG=0 clean</NMakeCleanCommandLine>
     <NMakeOutput>makprj.exe</NMakeOutput>
-    <NMakePreprocessorDefinitions>WIN32;NDEBUG;WIN64;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakePreprocessorDefinitions>WIN32;NDEBUG;WIN64;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>-->
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <BuildLog>
