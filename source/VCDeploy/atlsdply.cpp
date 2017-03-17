@@ -14,56 +14,63 @@
 
 __inline
 errno_t __cdecl DuplicateEnvString(TCHAR **_PBuffer, size_t *_PBufferSizeInBytes, const TCHAR *_VarName)
-{	
-    TCHAR *str;
-    size_t size;
+{
+	//TCHAR *str;
+	size_t size;
+	errno_t err;
+	TCHAR* dst;
 
-    /* validation section */
+	/* validation section */
 	if (_PBuffer == NULL) { return  EINVAL; }
-    *_PBuffer = NULL;
-    if (_PBufferSizeInBytes != NULL)
-    {
-        *_PBufferSizeInBytes = 0;
-    }
-    /* varname is already validated in getenv */
+	dst = *_PBuffer = NULL;
+	if (_PBufferSizeInBytes != NULL)
+	{
+		*_PBufferSizeInBytes = 0;
+	}
+	/* varname is already validated in getenv */
 
-    __pragma(warning(push))
-    __pragma(warning(disable:4996))
-    str = CA2T(getenv(CT2A(_VarName)));
-    __pragma(warning(pop))
-    if (str == NULL)
-    {
-        return 0;
-    }
+	__pragma(warning(push))
+		__pragma(warning(disable:4996))
+		CA2T str(getenv(CT2A(_VarName)));
+	__pragma(warning(pop))
+		if (str == NULL)
+		{
+			return 0;
+		}
 
-    size = _tcslen(str) + 1;
-    *_PBuffer = (TCHAR*)malloc(size * sizeof(TCHAR));
-    if (*_PBuffer == NULL)
-    {
-        return ENOMEM;
-    }
-    
-    _tcscpy_s(*_PBuffer, size, str);
-    if (_PBufferSizeInBytes != NULL)
-    {
-        *_PBufferSizeInBytes = size;
-    }
-	
-    return 0;
+	size = _tcslen(str) + 1;
+	dst = (TCHAR*)malloc(size * sizeof(TCHAR));
+	if (dst == NULL)
+	{
+		return ENOMEM;
+	}
+
+	err = _tcscpy_s(dst, size, str);
+	if (err != 0)
+	{
+		return err;
+	}
+
+	if (_PBufferSizeInBytes != NULL)
+	{
+		*_PBufferSizeInBytes = size * sizeof(TCHAR);
+	}
+
+	return 0;
 }
 
 #define _TCSNLEN(sz,c) (min(_tcslen(sz), c))
 #define PATHLEFT(sz) (_MAX_PATH - _TCSNLEN(sz, (_MAX_PATH-1)) - 1)
 
-typedef LANGID (WINAPI* PFNGETUSERDEFAULTUILANGUAGE)();
+typedef LANGID(WINAPI* PFNGETUSERDEFAULTUILANGUAGE)();
 
-static BOOL CALLBACK _EnumResLangProc(HMODULE /*hModule*/, LPCTSTR /*pszType*/, 
+static BOOL CALLBACK _EnumResLangProc(HMODULE /*hModule*/, LPCTSTR /*pszType*/,
 	LPCTSTR /*pszName*/, WORD langid, LONG_PTR lParam)
 {
-	if(lParam == NULL)
+	if (lParam == NULL)
 		return FALSE;
-		
-	LANGID* plangid = reinterpret_cast< LANGID* >( lParam );
+
+	LANGID* plangid = reinterpret_cast<LANGID*>(lParam);
 	*plangid = langid;
 
 	return TRUE;
@@ -77,12 +84,12 @@ static BOOL CALLBACK _EnumResLangProc(HMODULE /*hModule*/, LPCTSTR /*pszType*/,
 //////////////////////////////////////////////////////////////////////////
 HRESULT GetUserDefaultUILanguageLegacyCompat(LANGID* pLangid)
 {
-	HRESULT hr=E_FAIL;	
+	HRESULT hr = E_FAIL;
 	if (pLangid == NULL) { return E_POINTER; }
-	PFNGETUSERDEFAULTUILANGUAGE pfnGetUserDefaultUILanguage;	
+	PFNGETUSERDEFAULTUILANGUAGE pfnGetUserDefaultUILanguage;
 	HINSTANCE hKernel32 = ::GetModuleHandle(_T("kernel32.dll"));
 	pfnGetUserDefaultUILanguage = (PFNGETUSERDEFAULTUILANGUAGE)::GetProcAddress(hKernel32, "GetUserDefaultUILanguage");
-	if(pfnGetUserDefaultUILanguage != NULL)
+	if (pfnGetUserDefaultUILanguage != NULL)
 	{
 		*pLangid = pfnGetUserDefaultUILanguage();
 		hr = S_OK;
@@ -100,163 +107,163 @@ HRESULT GetUserDefaultUILanguageLegacyCompat(LANGID* pLangid)
 //		  size_t sizeInCharacters - buffer size in characters
 //Returns: Success (found dll) - S_OK , Failure - E_FAIL or E_UNEXPECTED
 //////////////////////////////////////////////////////////////////////////
-HRESULT LoadUILibrary(LPCTSTR szPath, LPCTSTR szDllName, DWORD dwExFlags, 
-                      HINSTANCE *phinstOut, LPTSTR szFullPathOut,size_t sizeInCharacters,
-                      LCID *plcidOut)
+HRESULT LoadUILibrary(LPCTSTR szPath, LPCTSTR szDllName, DWORD dwExFlags,
+	HINSTANCE *phinstOut, LPTSTR szFullPathOut, size_t sizeInCharacters,
+	LCID *plcidOut)
 {
-    TCHAR szPathTemp[_MAX_PATH + 1] = _T("");
-    HRESULT hr = E_FAIL;
-    LCID lcidFound = (LCID)-1;
-    size_t pathEnd;
+	TCHAR szPathTemp[_MAX_PATH + 1] = _T("");
+	HRESULT hr = E_FAIL;
+	LCID lcidFound = (LCID)-1;
+	size_t pathEnd;
 
-    // Gotta have this stuff!
-	if (szPath==NULL || *szPath == '\0')	   { return E_POINTER; }
-    if (szDllName==NULL || *szDllName == '\0') { return E_POINTER; }
+	// Gotta have this stuff!
+	if (szPath == NULL || *szPath == '\0') { return E_POINTER; }
+	if (szDllName == NULL || *szDllName == '\0') { return E_POINTER; }
 
-    if (!szPath || !*szPath || !szDllName || !*szDllName)
-        return E_INVALIDARG;
+	if (!szPath || !*szPath || !szDllName || !*szDllName)
+		return E_INVALIDARG;
 
-    if (phinstOut != NULL)
-    {
-        *phinstOut = NULL;
-    }
-
-    szPathTemp[_MAX_PATH-1] = L'\0';
-
-    // Add \ to the end if necessary
-    _tcsncpy_s(szPathTemp,_countof(szPathTemp), szPath, _MAX_PATH-1);
-    if (szPathTemp[_TCSNLEN(szPathTemp, _MAX_PATH-1) - 1] != L'\\')
-    {
-        _tcsncat_s(szPathTemp,_countof(szPathTemp), _T("\\"), PATHLEFT(szPathTemp));
-    }
-
-    // Check if given path even exists
-    if (GetFileAttributes(szPathTemp) == 0xFFFFFFFF)
+	if (phinstOut != NULL)
 	{
-        return E_FAIL;
+		*phinstOut = NULL;
 	}
 
-    pathEnd = _TCSNLEN(szPathTemp, _MAX_PATH-1);
-    
-    {	        
-		LANGID langid=0;
+	szPathTemp[_MAX_PATH - 1] = L'\0';
+
+	// Add \ to the end if necessary
+	_tcsncpy_s(szPathTemp, _countof(szPathTemp), szPath, _MAX_PATH - 1);
+	if (szPathTemp[_TCSNLEN(szPathTemp, _MAX_PATH - 1) - 1] != L'\\')
+	{
+		_tcsncat_s(szPathTemp, _countof(szPathTemp), _T("\\"), PATHLEFT(szPathTemp));
+	}
+
+	// Check if given path even exists
+	if (GetFileAttributes(szPathTemp) == 0xFFFFFFFF)
+	{
+		return E_FAIL;
+	}
+
+	pathEnd = _TCSNLEN(szPathTemp, _MAX_PATH - 1);
+
+	{
+		LANGID langid = 0;
 		if (FAILED(GetUserDefaultUILanguageLegacyCompat(&langid)))
 		{
 			return E_UNEXPECTED;
 		}
-        const LCID lcidUser = MAKELCID(langid, SORT_DEFAULT);
-        
-        LCID rglcid[3];
-        rglcid[0] = lcidUser;
-        rglcid[1] = MAKELCID(MAKELANGID(PRIMARYLANGID(lcidUser), SUBLANG_DEFAULT), SORTIDFROMLCID(lcidUser));
-        rglcid[2] = 0x409;
-        for (int i = 0; i < _countof(rglcid); i++)
-        {
-            TCHAR szNumBuf[10];
-            
-            // Check if it's the same as any LCID already checked,
-            // which is very possible
+		const LCID lcidUser = MAKELCID(langid, SORT_DEFAULT);
+
+		LCID rglcid[3];
+		rglcid[0] = lcidUser;
+		rglcid[1] = MAKELCID(MAKELANGID(PRIMARYLANGID(lcidUser), SUBLANG_DEFAULT), SORTIDFROMLCID(lcidUser));
+		rglcid[2] = 0x409;
+		for (int i = 0; i < _countof(rglcid); i++)
+		{
+			TCHAR szNumBuf[10];
+
+			// Check if it's the same as any LCID already checked,
+			// which is very possible
 			int n = 0;
-            for (n = 0; n < i; n++)
-            {
-                if (rglcid[n] == rglcid[i])
-                    break;
-            }
-
-            if (n < i)
+			for (n = 0; n < i; n++)
 			{
-                continue;
+				if (rglcid[n] == rglcid[i])
+					break;
 			}
-            
-            szPathTemp[pathEnd] = L'\0';
-			_itot_s(rglcid[i], szNumBuf,_countof(szNumBuf), 10);
-            _tcsncat_s(szPathTemp, _countof(szPathTemp),szNumBuf , PATHLEFT(szPathTemp));
-            _tcsncat_s(szPathTemp,_countof(szPathTemp), _T("\\"), PATHLEFT(szPathTemp));
-            _tcsncat_s(szPathTemp,_countof(szPathTemp), szDllName, PATHLEFT(szPathTemp));
 
-            if (GetFileAttributes(szPathTemp) != 0xFFFFFFFF)
-            {
-                lcidFound = rglcid[i];
+			if (n < i)
+			{
+				continue;
+			}
 
-                hr = S_OK;
-                goto Done;
-            }
-        }
-    }
+			szPathTemp[pathEnd] = L'\0';
+			_itot_s(rglcid[i], szNumBuf, _countof(szNumBuf), 10);
+			_tcsncat_s(szPathTemp, _countof(szPathTemp), szNumBuf, PATHLEFT(szPathTemp));
+			_tcsncat_s(szPathTemp, _countof(szPathTemp), _T("\\"), PATHLEFT(szPathTemp));
+			_tcsncat_s(szPathTemp, _countof(szPathTemp), szDllName, PATHLEFT(szPathTemp));
 
-    // None of the default choices exists, so now look for the dll in a folder below
+			if (GetFileAttributes(szPathTemp) != 0xFFFFFFFF)
+			{
+				lcidFound = rglcid[i];
+
+				hr = S_OK;
+				goto Done;
+			}
+		}
+	}
+
+	// None of the default choices exists, so now look for the dll in a folder below
 	//the given path (szPath)
-    {
-        WIN32_FIND_DATA wfdw;
-        HANDLE hDirs;
-        
-        szPathTemp[pathEnd] = L'\0';
-        _tcsncat_s(szPathTemp,_countof(szPathTemp), _T("*.*"), PATHLEFT(szPathTemp));
+	{
+		WIN32_FIND_DATA wfdw;
+		HANDLE hDirs;
 
-        hDirs = FindFirstFile(szPathTemp, &wfdw);
-        pathEnd = _TCSNLEN(szPathTemp, _MAX_PATH-1)-3;
-        if (hDirs != INVALID_HANDLE_VALUE)
-        {
-            while (FindNextFile(hDirs, &wfdw))
-            {
-                // We are only interested in directories, since at this level, that should
-                // be the only thing in this directory, i.e, LCID sub dirs
-                if (wfdw.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                {
-                    // Skip current and previous dirs, "." and ".."
-                    if (!_tcscmp(wfdw.cFileName, _T(".")) || !_tcscmp(wfdw.cFileName, _T("..")))
-                        continue;
+		szPathTemp[pathEnd] = L'\0';
+		_tcsncat_s(szPathTemp, _countof(szPathTemp), _T("*.*"), PATHLEFT(szPathTemp));
 
-                    // Does this dir have a copy of the dll?
-                    szPathTemp[pathEnd] = L'\0';
-                    _tcsncat_s(szPathTemp,_countof(szPathTemp), wfdw.cFileName, PATHLEFT(szPathTemp));
-                    _tcsncat_s(szPathTemp,_countof(szPathTemp), _T("\\"), PATHLEFT(szPathTemp));
-                    _tcsncat_s(szPathTemp,_countof(szPathTemp), szDllName, PATHLEFT(szPathTemp));
+		hDirs = FindFirstFile(szPathTemp, &wfdw);
+		pathEnd = _TCSNLEN(szPathTemp, _MAX_PATH - 1) - 3;
+		if (hDirs != INVALID_HANDLE_VALUE)
+		{
+			while (FindNextFile(hDirs, &wfdw))
+			{
+				// We are only interested in directories, since at this level, that should
+				// be the only thing in this directory, i.e, LCID sub dirs
+				if (wfdw.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+				{
+					// Skip current and previous dirs, "." and ".."
+					if (!_tcscmp(wfdw.cFileName, _T(".")) || !_tcscmp(wfdw.cFileName, _T("..")))
+						continue;
 
-                    if (GetFileAttributes(szPathTemp) != 0xFFFFFFFF)
-                    {
-                        // Got it!
-                        lcidFound = (LCID)_tstol(wfdw.cFileName);
+					// Does this dir have a copy of the dll?
+					szPathTemp[pathEnd] = L'\0';
+					_tcsncat_s(szPathTemp, _countof(szPathTemp), wfdw.cFileName, PATHLEFT(szPathTemp));
+					_tcsncat_s(szPathTemp, _countof(szPathTemp), _T("\\"), PATHLEFT(szPathTemp));
+					_tcsncat_s(szPathTemp, _countof(szPathTemp), szDllName, PATHLEFT(szPathTemp));
 
-                        hr = S_OK;
-                        break;
-                    }
-                }
-            }
+					if (GetFileAttributes(szPathTemp) != 0xFFFFFFFF)
+					{
+						// Got it!
+						lcidFound = (LCID)_tstol(wfdw.cFileName);
 
-            FindClose(hDirs);
-        }
-    }
+						hr = S_OK;
+						break;
+					}
+				}
+			}
+
+			FindClose(hDirs);
+		}
+	}
 
 Done:
-    if (SUCCEEDED(hr))
-    {
-        // Set the default LCID
-        if (plcidOut)
-        {
-			if (lcidFound == (LCID)-1) 
-			{ 
-				return E_UNEXPECTED; 
-			}
-            *plcidOut = lcidFound;
-        }
-
-        // Finally, attempt to load the library
-        // Beware!  A dll loaded with LOAD_LIBRARY_AS_DATAFILE won't
-        // let you use LoadIcon and things like that (only general calls like
-        // FindResource and LoadResource).
-        if (phinstOut != NULL)
-        {
-            *phinstOut = LoadLibraryEx(szPathTemp, NULL, dwExFlags);
-            hr = (*phinstOut) ? S_OK : E_FAIL;
-        }
-        if ( szFullPathOut )
+	if (SUCCEEDED(hr))
+	{
+		// Set the default LCID
+		if (plcidOut)
 		{
-            _tcsncpy_s(szFullPathOut,sizeInCharacters, szPathTemp, _MAX_PATH-1);
+			if (lcidFound == (LCID)-1)
+			{
+				return E_UNEXPECTED;
+			}
+			*plcidOut = lcidFound;
 		}
-    }
- 
-    return hr;
+
+		// Finally, attempt to load the library
+		// Beware!  A dll loaded with LOAD_LIBRARY_AS_DATAFILE won't
+		// let you use LoadIcon and things like that (only general calls like
+		// FindResource and LoadResource).
+		if (phinstOut != NULL)
+		{
+			*phinstOut = LoadLibraryEx(szPathTemp, NULL, dwExFlags);
+			hr = (*phinstOut) ? S_OK : E_FAIL;
+		}
+		if (szFullPathOut)
+		{
+			_tcsncpy_s(szFullPathOut, sizeInCharacters, szPathTemp, _MAX_PATH - 1);
+		}
+	}
+
+	return hr;
 }
 //////////////////////////////////////////////////////////////////////////
 //Purpose: Iterates env("PATH") directories to try to find (using LoadUILibrary)
@@ -269,63 +276,65 @@ Done:
 //		  size_t sizeInCharacters - buffer size in characters
 //Returns: Success - HMODULE of found dll, Failure - NULL
 //////////////////////////////////////////////////////////////////////////
-HMODULE LoadSearchPath(LPCTSTR szDllName,TCHAR *szPathOut, size_t sizeInCharacters)
+HMODULE LoadSearchPath(LPCTSTR szDllName, TCHAR *szPathOut, size_t sizeInCharacters)
 {
-    TCHAR * szEnvPATH = NULL;
+	TCHAR * szEnvPATH = NULL;
 	TCHAR * szEnvPATHBuff = NULL;
-    TCHAR szPath[_MAX_PATH+1];
-    TCHAR * ptry;
-    int pathlen;
-    int nPathIndex = 0;
-    HMODULE hmod = NULL;	
-    if (DuplicateEnvString(&szEnvPATHBuff,NULL,_T("PATH"))==0 && (szEnvPATH=szEnvPATHBuff) != NULL) 
+	TCHAR szPath[_MAX_PATH + 1];
+	TCHAR * ptry;
+	int pathlen;
+	int nPathIndex = 0;
+	HMODULE hmod = NULL;
+	if (DuplicateEnvString(&szEnvPATHBuff, NULL, _T("PATH")) == 0 && (szEnvPATH = szEnvPATHBuff) != NULL)
 	{
-        while (*szEnvPATH) 
+		while (*szEnvPATH)
 		{
-            /* skip leading white space and nop semicolons */
-            for (; *szEnvPATH == L' ' || *szEnvPATH == L';'; ++szEnvPATH)
-            {} /* NOTHING */
-
-            if (*szEnvPATH == L'\0')
+			/* skip leading white space and nop semicolons */
+			for (; *szEnvPATH == L' ' || *szEnvPATH == L';'; ++szEnvPATH)
 			{
-                break;
+			} /* NOTHING */
+
+			if (*szEnvPATH == L'\0')
+			{
+				break;
 			}
 
-            ++nPathIndex;
+			++nPathIndex;
 
-            /* copy this chunk of the path into our trypath */
-            pathlen = 0;
-            for (ptry = szPath; *szEnvPATH != L'\0' && *szEnvPATH != L';'; ++szEnvPATH) 
+			/* copy this chunk of the path into our trypath */
+			pathlen = 0;
+			for (ptry = szPath; *szEnvPATH != L'\0' && *szEnvPATH != L';'; ++szEnvPATH)
 			{
 				++pathlen;
-                if (pathlen < _MAX_PATH) 
-				{                    
-                    *ptry++ = *szEnvPATH;
-                } else 
+				if (pathlen < _MAX_PATH)
 				{
-                    break;
-                }
-            }
-            *ptry = L'\0';
+					*ptry++ = *szEnvPATH;
+				}
+				else
+				{
+					break;
+				}
+			}
+			*ptry = L'\0';
 
-            if (pathlen == 0 || pathlen >= _MAX_PATH)
+			if (pathlen == 0 || pathlen >= _MAX_PATH)
 			{
-                continue;
+				continue;
 			}
 
-            LoadUILibrary(szPath, szDllName, LOAD_LIBRARY_AS_DATAFILE, 
-                          &hmod, szPathOut,sizeInCharacters, NULL);
-            if ( hmod )
+			LoadUILibrary(szPath, szDllName, LOAD_LIBRARY_AS_DATAFILE,
+				&hmod, szPathOut, sizeInCharacters, NULL);
+			if (hmod)
 			{
-                break;
+				break;
 			}
-        }
-    }
-	if (szEnvPATHBuff!=NULL)
+		}
+	}
+	if (szEnvPATHBuff != NULL)
 	{
 		free(szEnvPATHBuff);
 	}
-    return hmod;
+	return hmod;
 }
 //Example: Say PATH="c:\bin;d:\win", resource dll name (szDllName) is "ToolUI.dll",
 //		   user locale is 936, and the .exe calling LoadLocResDll is c:\MyTools\Tool.exe
@@ -343,44 +352,44 @@ HMODULE LoadSearchPath(LPCTSTR szDllName,TCHAR *szPathOut, size_t sizeInCharacte
 //			Note: The primary lang (without the sublang) is tested after the user ui lang.
 // Main Input: szDllName - the name of the resource dll <ToolName>ui.dll. Ex: vcdeployUI.dll
 // Main Output: HMODULE of resource dll or NULL - if not found (see bExeDefaultModule).
-HMODULE LoadLocResDll(LPCTSTR szDllName,BOOL bExeDefaultModule=TRUE,DWORD dwExFlags=LOAD_LIBRARY_AS_DATAFILE,LPTSTR pszPathOut = NULL,size_t sizeInCharacters = 0  )
+HMODULE LoadLocResDll(LPCTSTR szDllName, BOOL bExeDefaultModule = TRUE, DWORD dwExFlags = LOAD_LIBRARY_AS_DATAFILE, LPTSTR pszPathOut = NULL, size_t sizeInCharacters = 0)
 {
-    HMODULE hmod;
-    TCHAR driverpath[_MAX_PATH + 1], exepath[_MAX_PATH + 1];
-    LPTSTR p;
-    
-    GetModuleFileName(GetModuleHandle(NULL), driverpath, _MAX_PATH);
-    // find path of tool
-    p = driverpath + _TCSNLEN(driverpath, _MAX_PATH-1)-1;
-    while ( *p != L'\\' && p != driverpath)
+	HMODULE hmod;
+	TCHAR driverpath[_MAX_PATH + 1], exepath[_MAX_PATH + 1];
+	LPTSTR p;
+
+	GetModuleFileName(GetModuleHandle(NULL), driverpath, _MAX_PATH);
+	// find path of tool
+	p = driverpath + _TCSNLEN(driverpath, _MAX_PATH - 1) - 1;
+	while (*p != L'\\' && p != driverpath)
 	{
-        p--;
+		p--;
 	}
-    *p = '\0';
+	*p = '\0';
 
-    LoadUILibrary(driverpath, szDllName, dwExFlags, 
-                  &hmod, exepath,_countof(exepath), NULL);
+	LoadUILibrary(driverpath, szDllName, dwExFlags,
+		&hmod, exepath, _countof(exepath), NULL);
 
-    if ( hmod == NULL ) 
+	if (hmod == NULL)
 	{
-        // search PATH\<lcid> for <ToolName>ui.dll
-        hmod = LoadSearchPath(szDllName,exepath,_countof(exepath));
-    }
+		// search PATH\<lcid> for <ToolName>ui.dll
+		hmod = LoadSearchPath(szDllName, exepath, _countof(exepath));
+	}
 
-    if ( hmod && pszPathOut )
+	if (hmod && pszPathOut)
 	{
-        _tcsncpy_s(pszPathOut,sizeInCharacters, exepath, _MAX_PATH-1);
+		_tcsncpy_s(pszPathOut, sizeInCharacters, exepath, _MAX_PATH - 1);
 	}
 	//Not found dll, return the exe HINSTANCE as a fallback.
 	if (hmod == NULL && bExeDefaultModule)
 	{
-		hmod=GetModuleHandle(NULL);
+		hmod = GetModuleHandle(NULL);
 	}
-    return hmod;
+	return hmod;
 }
 //End loc routines
 ////////////////////////////////////////////////////////////////////
-const TCHAR* szVcdeployUIDll=_T("vcdeployUI.dll");
+const TCHAR* szVcdeployUIDll = _T("vcdeployUI.dll");
 
 
 #ifdef _UNICODE
@@ -389,7 +398,7 @@ int wmain(int argc, wchar_t* argv[])
 int main(int argc, char* argv[])
 #endif
 {
-	HINSTANCE hInst=LoadLocResDll(szVcdeployUIDll);
+	HINSTANCE hInst = LoadLocResDll(szVcdeployUIDll);
 	_AtlBaseModule.SetResourceInstance(hInst);
 	try
 	{
@@ -458,7 +467,7 @@ int main(int argc, char* argv[])
 		}
 		return 0;
 	}
-	catch(...)
+	catch (...)
 	{
 		PrintError(IDS_UNEXPECTED);
 		return 1;

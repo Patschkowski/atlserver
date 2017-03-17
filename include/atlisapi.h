@@ -62,7 +62,42 @@
 #pragma warning(disable: 4702) // unreachable code
 
 #include <initguid.h>
-//#include <dbgautoattach.h>
+#if 0
+#include <dbgautoattach.h>
+#else
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+	DEFINE_GUID(CLSID_DebugAutoAttach, 0x70f65411, 0xfe8c, 0x4248, 0xbc, 0xff, 0x70, 0x1c, 0x8b, 0x2f, 0x45, 0x29);
+
+
+	enum __MIDL_IDebugAutoAttach_0001
+	{
+		AUTOATTACH_PROGRAM_WIN32 = 0x1,
+		AUTOATTACH_PROGRAM_COMPLUS = 0x2
+	};
+	typedef DWORD AUTOATTACH_PROGRAM_TYPE;
+
+	EXTERN_C const IID IID_IDebugAutoAttach;
+
+	MIDL_INTERFACE("E9958F1F-0A56-424a-A300-530EBB2E9865")
+		IDebugAutoAttach : public IUnknown
+	{
+	public:
+		virtual HRESULT STDMETHODCALLTYPE AutoAttach(
+			/* [in] */ REFGUID guidPort,
+			/* [in] */ DWORD dwPid,
+			/* [in] */ AUTOATTACH_PROGRAM_TYPE dwProgramType,
+			/* [in] */ DWORD dwProgramId,
+			/* [in] */ LPCWSTR pszSessionId) = 0;
+	};
+
+#ifdef __cplusplus
+}
+#endif
+#endif
 
 #ifndef SESSION_COOKIE_NAME
 	#define SESSION_COOKIE_NAME "SESSIONID"
@@ -3297,12 +3332,12 @@ public:
 
 	void RemoveAll()
 	{
-		if (!IsShared())
+		if (!this->IsShared())
 		{
-			POSITION pos = GetStartPosition();
+			POSITION pos = this->GetStartPosition();
 			while (pos)
 			{
-				GetNextValue(pos)->Free();
+				this->GetNextValue(pos)->Free();
 			}
 		}
 		Base::RemoveAll();
@@ -3375,7 +3410,7 @@ public:
 		{
 			LPSTR szUrlCurrent = szQueryString;
 			LPSTR szName = szUrlCurrent;
-			LPSTR szPropValue;
+			LPCSTR szPropValue;
 
 			while (*szQueryString)
 			{
@@ -7087,7 +7122,7 @@ public:
 
 	STDMETHOD_(ULONG, Release)() throw()
 	{
-		ULONG l = InternalRelease();
+		ULONG l = this->InternalRelease();
 		if (l == 0)
 		{
 			T *pT = static_cast<T*>(this);
@@ -7793,8 +7828,8 @@ class _CComObjectHeapNoLock : public Base
 	// also catch mismatched Release in debug builds
 	~_CComObjectHeapNoLock()
 	{
-		m_dwRef = -(LONG_MAX/2);
-		FinalRelease();
+		this->m_dwRef = -(LONG_MAX/2);
+		this->FinalRelease();
 #ifdef _ATL_DEBUG_INTERFACES
 		_AtlDebugInterfacesModule.DeleteNonAddRefThunk(_GetRawUnknown());
 #endif
@@ -7802,10 +7837,10 @@ class _CComObjectHeapNoLock : public Base
 
 	//If InternalAddRef or InternalRelease is undefined then your class
 	//doesn't derive from CComObjectRoot
-	STDMETHOD_(ULONG, AddRef)() throw() {return InternalAddRef();}
+	STDMETHOD_(ULONG, AddRef)() throw() {return this->InternalAddRef();}
 	STDMETHOD_(ULONG, Release)() throw()
 	{
-		ULONG l = InternalRelease();
+		ULONG l = this->InternalRelease();
 		if (l == 0)
 		{
 			HANDLE hHeap = m_hHeap;;
@@ -7819,7 +7854,7 @@ class _CComObjectHeapNoLock : public Base
 	}
 	//if _InternalQueryInterface is undefined then you forgot BEGIN_COM_MAP
 	STDMETHOD(QueryInterface)(REFIID iid, void ** ppvObject) throw()
-	{return _InternalQueryInterface(iid, ppvObject);}
+	{return this->_InternalQueryInterface(iid, ppvObject);}
 
 	static HRESULT WINAPI CreateInstance(_CComObjectHeapNoLock<Base>** pp, HANDLE hHeap) throw();	
 };
@@ -8983,7 +9018,7 @@ public:
 			{
 				strFormat = "<html><body>A critical error has occurred initializing this ISAPI extension: %s</body></html>";
 			}
-			strBody.Format(strFormat, strError);
+			strBody.Format(strFormat, static_cast<LPCSTR>(strError));
 #endif
 			strStatus.Format("500 %s", szHeader);
 
@@ -9136,7 +9171,7 @@ public:
 			{
 				strFormat = "A critical error has occurred initializing the ISAPI extension: %s";
 			}
-			strBody.Format(strFormat, strError);
+			strBody.Format(strFormat, static_cast<LPCSTR>(strError));
 
 			// take the base module name as the app name
 			CPath path;

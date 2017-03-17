@@ -3510,7 +3510,7 @@ public:
 				return HTTP_FAIL;
 			}
 
-			pStencil->SetErrorResource(GetResourceInstance());
+			pStencil->SetErrorResource(this->GetResourceInstance());
 
 			// finish loading
 			hcErr = pStencil->LoadFromFile(szFileName);
@@ -3837,8 +3837,8 @@ public:
 
 	CRequestHandlerT() throw()
 	{
-		m_hInstHandler = NULL;
-		m_dwAsyncFlags = 0;
+		this->m_hInstHandler = NULL;
+		this->m_dwAsyncFlags = 0;
 		m_pRequestInfo = NULL;
 	}
 
@@ -3846,7 +3846,7 @@ public:
 	{
 		_ATLTRY
 		{
-			FreeHandlers(); // free handlers held by CTagReplacer
+			this->FreeHandlers(); // free handlers held by CTagReplacer
 		}
 		_ATLCATCHALL()
 		{
@@ -3874,9 +3874,9 @@ public:
 		// Initialize our internal references to required services
 		m_pRequestInfo = pRequestInfo;
 		m_state.pParentInfo = pRequestInfo;
-		m_hInstHandler = pRequestInfo->hInstDll;
-		m_spServerContext = pRequestInfo->pServerContext;
-		m_spServiceProvider = pProvider;
+		this->m_hInstHandler = pRequestInfo->hInstDll;
+		this->m_spServerContext = pRequestInfo->pServerContext;
+		this->m_spServiceProvider = pProvider;
 		return HTTP_SUCCESS;
 	}
 
@@ -3892,12 +3892,12 @@ public:
 		hcErr = pT->InitializeInternal(pRequestInfo, pProvider);
 		if (!hcErr)
 		{
-			m_HttpResponse.Initialize(m_spServerContext);
+			m_HttpResponse.Initialize(this->m_spServerContext);
 			hcErr = pT->CheckValidRequest();
 			if (!hcErr)
 			{
 				hcErr = HTTP_FAIL;
-				if (m_HttpRequest.Initialize(m_spServerContext, 
+				if (m_HttpRequest.Initialize(this->m_spServerContext, 
 											 pT->MaxFormSize(),
 											 pT->FormFlags()))
 				{
@@ -3940,9 +3940,9 @@ public:
 			// the only time this is different than the previous call to 
 			// initialize is if the user passes a different IHttpServerContext
 			// in pRequestInfo than the one extracted from pRequestLookup.
-			if (m_spServerContext)
+			if (this->m_spServerContext)
 			{
-				if(!m_HttpResponse.Initialize(m_spServerContext))
+				if(!this->m_HttpResponse.Initialize(this->m_spServerContext))
 				{
 					return HTTP_FAIL;
 				}
@@ -3958,9 +3958,9 @@ public:
 
 			// initialize with the m_spServerContext to get additional query params
 			// if they exist.
-			if (m_spServerContext)
+			if (this->m_spServerContext)
 			{
-				m_HttpRequest.Initialize(m_spServerContext);
+				m_HttpRequest.Initialize(this->m_spServerContext);
 			}
 		}
 
@@ -4024,7 +4024,7 @@ public:
 		}
 #endif
 
-		if (hcErr == HTTP_SUCCESS && m_pLoadedStencil)
+		if (hcErr == HTTP_SUCCESS && this->m_pLoadedStencil)
 		{
 			// if anything other than HTTP_SUCCESS is returned during
 			// the rendering of replacement tags, we return that value
@@ -4110,7 +4110,7 @@ public:
 			return E_POINTER;
 		if (InlineIsEqualGUID(riid, __uuidof(IHttpServerContext)))
 		{
-			return m_spServerContext.CopyTo((IHttpServerContext **)ppv);
+			return this->m_spServerContext.CopyTo((IHttpServerContext **)ppv);
 		}
 		if (InlineIsEqualGUID(riid, __uuidof(IHttpRequestLookup)))
 		{
@@ -4120,8 +4120,8 @@ public:
 		}
 		if (InlineIsEqualGUID(riid, __uuidof(IServiceProvider)))
 		{
-			*ppv = m_spServiceProvider;
-			m_spServiceProvider.p->AddRef();
+			*ppv = this->m_spServiceProvider;
+			this->m_spServiceProvider.p->AddRef();
 			return S_OK;
 		}
 		return E_NOINTERFACE;

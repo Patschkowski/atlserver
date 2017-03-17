@@ -348,7 +348,7 @@ protected:
 	BOOL _WantCategoryType(__in_z LPWSTR lpwszValue, __in DWORD dwPerfId) throw(...);
 	void _FillCategoryType(CategoryInfo* pCategoryInfo) throw();
 	void _FillCounterDef(CounterInfo* pCounterInfo, ULONG* pnCounterBlockSize) throw();
-	HRESULT CPerfMon::_CollectInstance(
+	HRESULT /*CPerfMon::*/_CollectInstance(
 		CategoryInfo* pCategoryInfo,
 		LPBYTE& pData,
 		ULONG nBytesAvail,
@@ -376,7 +376,7 @@ protected:
 		IXMLDOMNode *pNode, 
 		LPCWSTR szAttrName, 
 		BSTR *pbstrVal) throw();
-	HRESULT CPerfMon::_CreateInstance(
+	HRESULT /*CPerfMon::*/_CreateInstance(
 		DWORD dwCategoryId,
 		DWORD dwInstance,
 		LPCWSTR szInstanceName,
