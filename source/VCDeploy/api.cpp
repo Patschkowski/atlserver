@@ -27,13 +27,13 @@ public:
 	}
 	bool Lock()
 	{
-		printf("Trying to lock mutex %lx\n", (DWORD_PTR)hMutex);
+		printf("Trying to lock mutex %llx\n", static_cast<unsigned long long>((DWORD_PTR)hMutex));
 		DWORD dw = WaitForSingleObject(hMutex, 10000);
 		return (dw == WAIT_OBJECT_0);
 	}
 	~CIISMutex()
 	{
-		printf("Releasing mutex %lx\n", (DWORD_PTR)hMutex);
+		printf("Releasing mutex %llx\n", static_cast<unsigned long long>((DWORD_PTR)hMutex));
 		ReleaseMutex(hMutex);
 		CloseHandle(hMutex);
 	}
@@ -1316,7 +1316,13 @@ int RegisterExtension(CADSIHelper* /*pAdsHelper*/,
 
 	HINSTANCE hInstExtension = ::LoadLibraryW(strIsapiPath);
 	if (!hInstExtension)
+	{
+		/*HRESULT dwErrCode = HRESULT_FROM_WIN32(GetLastError());
+		
+		UNREFERENCED_PARAMETER(dwErrCode);*/
+
 		return IDS_ERR_REGISTERING_EXTENSION;
+	}
 
 	PFNRegisterServer pfnRegister = (PFNRegisterServer)GetProcAddress(hInstExtension, "DllRegisterServer");
 	if (pfnRegister)
@@ -1325,7 +1331,10 @@ int RegisterExtension(CADSIHelper* /*pAdsHelper*/,
 			nRet = ATLSDPLY_SUCCESS;
 	}
 	else
-		return IDS_ERR_REGISTERING_EXTENSION;
+	{
+		nRet = IDS_ERR_REGISTERING_EXTENSION;
+	}
+
 	FreeLibrary(hInstExtension);
 	return nRet;
 }

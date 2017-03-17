@@ -8,5 +8,6 @@
 /.vs
 /source/CLStencil/Debug
 /source/VCDeploy/Debug
+/source/VCDeploy/x64
 /source/Debug
 /source/SProxy/Debug
