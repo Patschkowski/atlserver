@@ -574,9 +574,16 @@ public:
 // this is for ease of integration with the module attribute and for the 
 // perfmon wizard
 
+#if 0
 #pragma section("ATLP$A", read, shared)
 #pragma section("ATLP$Z", read, shared)
 #pragma section("ATLP$C", read, shared)
+#else
+// https://atlserver.codeplex.com/discussions/397796
+#pragma section("ATLP$A", read)
+#pragma section("ATLP$Z", read)
+#pragma section("ATLP$C", read)
+#endif
 extern "C"
 {
 __declspec(selectany) __declspec(allocate("ATLP$A")) CPerfMon * __pperfA = NULL;

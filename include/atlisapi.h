@@ -10384,9 +10384,16 @@ struct _HANDLER_ENTRY
 	UNINITHANDLERFUNC pfnUninit;
 };
 // definitions of data segments and _HANDLER_ENTRY delimiters
+#if 0
 #pragma section("ATLS$A", read, shared)
 #pragma section("ATLS$Z", read, shared)
 #pragma section("ATLS$C", read, shared)
+#else
+// https://atlserver.codeplex.com/discussions/397796
+#pragma section("ATLS$A", read)
+#pragma section("ATLS$Z", read)
+#pragma section("ATLS$C", read)
+#endif
 extern "C"
 {
 __declspec(selectany) __declspec(allocate("ATLS$A")) ATL::_HANDLER_ENTRY * __phdlrA = NULL;
