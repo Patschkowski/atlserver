@@ -4,8 +4,6 @@ VisualStudioVersion = 15.0.26228.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WebDbg", "WebDbg.vcxproj", "{92CB242B-575F-4D6B-92F5-5C950588AB08}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WebDbgUI", "WebDbgUI.vcxproj", "{E6297F08-80BB-458A-9A1F-9BB707EBFB02}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Itanium = Debug|Itanium
@@ -26,14 +24,6 @@ Global
 		{92CB242B-575F-4D6B-92F5-5C950588AB08}.Release|Win32.Build.0 = Release|Win32
 		{92CB242B-575F-4D6B-92F5-5C950588AB08}.Release|x64.ActiveCfg = Release|x64
 		{92CB242B-575F-4D6B-92F5-5C950588AB08}.Release|x64.Build.0 = Release|x64
-		{E6297F08-80BB-458A-9A1F-9BB707EBFB02}.Debug|Itanium.ActiveCfg = Debug|Win32
-		{E6297F08-80BB-458A-9A1F-9BB707EBFB02}.Debug|Win32.ActiveCfg = Debug|Win32
-		{E6297F08-80BB-458A-9A1F-9BB707EBFB02}.Debug|Win32.Build.0 = Debug|Win32
-		{E6297F08-80BB-458A-9A1F-9BB707EBFB02}.Debug|x64.ActiveCfg = Debug|Win32
-		{E6297F08-80BB-458A-9A1F-9BB707EBFB02}.Release|Itanium.ActiveCfg = Release|Win32
-		{E6297F08-80BB-458A-9A1F-9BB707EBFB02}.Release|Win32.ActiveCfg = Release|Win32
-		{E6297F08-80BB-458A-9A1F-9BB707EBFB02}.Release|Win32.Build.0 = Release|Win32
-		{E6297F08-80BB-458A-9A1F-9BB707EBFB02}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

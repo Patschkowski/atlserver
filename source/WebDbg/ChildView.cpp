@@ -84,7 +84,7 @@ void CChildView::OnEditFont()
 	LOGFONT lf;
 	m_font.GetLogFont(&lf);
 	CFontDialog fontDlg(&lf);
-	int nRet = fontDlg.DoModal();
+	INT_PTR nRet = fontDlg.DoModal();
 	if (nRet == IDCANCEL)
 		return;
 
@@ -104,7 +104,7 @@ void CChildView::OnFilter()
 	//Set the current break state
 	filterDlg.SetChecked(m_bBreakOnMessage);
 	filterDlg.SetRegEx(m_bRegEx);
-	int nRet = filterDlg.DoModal();
+	INT_PTR nRet = filterDlg.DoModal();
 	if (nRet == IDCANCEL)
 		return;
 
@@ -132,7 +132,7 @@ void CChildView::OnFileSave()
 {
 
 	CFileDialog fileDialog(FALSE);
-	int nRet = fileDialog.DoModal();
+	INT_PTR nRet = fileDialog.DoModal();
 
 	if (nRet == IDCANCEL)
 	{

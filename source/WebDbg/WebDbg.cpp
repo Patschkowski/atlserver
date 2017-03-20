@@ -27,54 +27,56 @@
 
 __inline
 errno_t __cdecl DuplicateEnvString(TCHAR **ppszBuffer, size_t *pnBufferSizeInTChars, const TCHAR *pszVarName)
-{	    
-    /* validation section */
+{
+	/* validation section */
 	if (ppszBuffer == NULL) { return  EINVAL; }
-    *ppszBuffer = NULL;
-    if (pnBufferSizeInTChars != NULL)
-    {
-        *pnBufferSizeInTChars = 0;
-    }
-    /* varname is already validated in getenv */
-	TCHAR szDummyBuff[1] = {0};
+	*ppszBuffer = NULL;
+	if (pnBufferSizeInTChars != NULL)
+	{
+		*pnBufferSizeInTChars = 0;
+	}
+	/* varname is already validated in getenv */
+	TCHAR szDummyBuff[1] = { 0 };
 	size_t nSizeNeeded = 0;
-    errno_t ret=_tgetenv_s(&nSizeNeeded,szDummyBuff,1,pszVarName);
+	errno_t ret = _tgetenv_s(&nSizeNeeded, szDummyBuff, 1, pszVarName);
 	if (nSizeNeeded > 0)
-	{	    		
+	{
 		*ppszBuffer = new TCHAR[nSizeNeeded];
 		if (*ppszBuffer != NULL)
 		{
 			size_t nSizeNeeded2 = 0;
-			ret=_tgetenv_s(&nSizeNeeded2,*ppszBuffer,nSizeNeeded,pszVarName);
-			if (nSizeNeeded2!=nSizeNeeded)
+			ret = _tgetenv_s(&nSizeNeeded2, *ppszBuffer, nSizeNeeded, pszVarName);
+			if (nSizeNeeded2 != nSizeNeeded)
 			{
-				ret=ERANGE;
-			} else if (pnBufferSizeInTChars != NULL)
+				ret = ERANGE;
+			}
+			else if (pnBufferSizeInTChars != NULL)
 			{
 				*pnBufferSizeInTChars = nSizeNeeded;
-			}				
-		} else
+			}
+		}
+		else
 		{
-			ret=ENOMEM;
-		}	    		
+			ret = ENOMEM;
+		}
 	}
-    return ret;
+	return ret;
 }
 
 #define _TCSNLEN(sz,c) (min(_tcslen(sz), c))
 #define PATHLEFT(sz) (_MAX_PATH - _TCSNLEN(sz, (_MAX_PATH-1)) - 1)
 
-typedef LANGID (WINAPI* PFNGETUSERDEFAULTUILANGUAGE)();
+typedef LANGID(WINAPI* PFNGETUSERDEFAULTUILANGUAGE)();
 
-static BOOL CALLBACK _EnumResLangProc(HMODULE /*hModule*/, LPCTSTR /*pszType*/, 
+static BOOL CALLBACK _EnumResLangProc(HMODULE /*hModule*/, LPCTSTR /*pszType*/,
 	LPCTSTR /*pszName*/, WORD langid, LONG_PTR lParam)
 {
-	if(lParam == NULL)
+	if (lParam == NULL)
 	{
 		return FALSE;
 	}
-		
-	LANGID* plangid = reinterpret_cast< LANGID* >( lParam );
+
+	LANGID* plangid = reinterpret_cast<LANGID*>(lParam);
 	*plangid = langid;
 
 	return TRUE;
@@ -88,42 +90,50 @@ static BOOL CALLBACK _EnumResLangProc(HMODULE /*hModule*/, LPCTSTR /*pszType*/,
 //////////////////////////////////////////////////////////////////////////
 HRESULT GetUserDefaultUILanguageLegacyCompat(LANGID* pLangid)
 {
-	HRESULT hr=E_FAIL;	
+	HRESULT hr = E_FAIL;
 	if (pLangid == NULL) { return E_POINTER; }
-	PFNGETUSERDEFAULTUILANGUAGE pfnGetUserDefaultUILanguage;	
+	PFNGETUSERDEFAULTUILANGUAGE pfnGetUserDefaultUILanguage;
 	HINSTANCE hKernel32 = ::GetModuleHandle(_T("kernel32.dll"));
 	pfnGetUserDefaultUILanguage = (PFNGETUSERDEFAULTUILANGUAGE)::GetProcAddress(hKernel32, "GetUserDefaultUILanguage");
-	if(pfnGetUserDefaultUILanguage != NULL)
+	if (pfnGetUserDefaultUILanguage != NULL)
 	{
 		*pLangid = pfnGetUserDefaultUILanguage();
 		hr = S_OK;
-	} else
+	}
+	else
 	{
 		// We're not on an MUI-capable system.
+#if 0
 		OSVERSIONINFO version;
 		memset(&version, 0, sizeof(version));
 		version.dwOSVersionInfoSize = sizeof(version);
 		::GetVersionEx(&version);
-		if( version.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS)
+		if (version.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS)
+#else
+		OSVERSIONINFOEX versionEx;
+		memset(&versionEx, 0, sizeof versionEx);
+		versionEx.dwPlatformId = VER_PLATFORM_WIN32_WINDOWS;
+		if (VerifyVersionInfo(&versionEx, VER_PLATFORMID, VerSetConditionMask(0, VER_PLATFORMID, VER_EQUAL)))
+#endif
 		{
 			// We're on Windows 9x, so look in the registry for the UI language
 			HKEY hKey = NULL;
-			LONG nResult = ::RegOpenKeyEx(HKEY_CURRENT_USER, 
-				_T( "Control Panel\\Desktop\\ResourceLocale" ), 0, KEY_READ, &hKey);
+			LONG nResult = ::RegOpenKeyEx(HKEY_CURRENT_USER,
+				_T("Control Panel\\Desktop\\ResourceLocale"), 0, KEY_READ, &hKey);
 			if (nResult == ERROR_SUCCESS)
 			{
 				DWORD dwType;
 				TCHAR szValue[16];
-				ULONG nBytes = sizeof( szValue );
-				nResult = ::RegQueryValueEx(hKey, NULL, NULL, &dwType, LPBYTE( szValue ), 
-					&nBytes );
+				ULONG nBytes = sizeof(szValue);
+				nResult = ::RegQueryValueEx(hKey, NULL, NULL, &dwType, LPBYTE(szValue),
+					&nBytes);
 				if ((nResult == ERROR_SUCCESS) && (dwType == REG_SZ))
 				{
 					DWORD dwLangID;
-					int nFields = _stscanf_s( szValue, _T( "%x" ), &dwLangID );
-					if( nFields == 1 )
+					int nFields = _stscanf_s(szValue, _T("%x"), &dwLangID);
+					if (nFields == 1)
 					{
-						*pLangid = LANGID( dwLangID );
+						*pLangid = LANGID(dwLangID);
 						hr = S_OK;
 					}
 				}
@@ -135,12 +145,12 @@ HRESULT GetUserDefaultUILanguageLegacyCompat(LANGID* pLangid)
 		{
 			// We're on NT 4.  The UI language is the same as the language of the version
 			// resource in ntdll.dll
-			HMODULE hNTDLL = ::GetModuleHandle( _T( "ntdll.dll" ) );
+			HMODULE hNTDLL = ::GetModuleHandle(_T("ntdll.dll"));
 			if (hNTDLL != NULL)
 			{
 				*pLangid = 0;
-				::EnumResourceLanguages( hNTDLL, RT_VERSION, MAKEINTRESOURCE( 1 ), 
-					_EnumResLangProc, reinterpret_cast< LONG_PTR >( pLangid ) );
+				::EnumResourceLanguages(hNTDLL, RT_VERSION, MAKEINTRESOURCE(1),
+					_EnumResLangProc, reinterpret_cast<LONG_PTR>(pLangid));
 				if (*pLangid != 0)
 				{
 					hr = S_OK;
@@ -160,170 +170,170 @@ HRESULT GetUserDefaultUILanguageLegacyCompat(LANGID* pLangid)
 //		  size_t sizeInCharacters - buffer size in characters
 //Returns: Success (found dll) - S_OK , Failure - E_FAIL or E_UNEXPECTED
 //////////////////////////////////////////////////////////////////////////
-HRESULT LoadUILibrary(LPCTSTR szPath, LPCTSTR szDllName, DWORD dwExFlags, 
-                      HINSTANCE *phinstOut, LPTSTR szFullPathOut,size_t sizeInCharacters,
-                      LCID *plcidOut)
+HRESULT LoadUILibrary(LPCTSTR szPath, LPCTSTR szDllName, DWORD dwExFlags,
+	HINSTANCE *phinstOut, LPTSTR szFullPathOut, size_t sizeInCharacters,
+	LCID *plcidOut)
 {
-    TCHAR szPathTemp[_MAX_PATH + 1] = _T("");
-    HRESULT hr = E_FAIL;
-    LCID lcidFound = (LCID)-1;
-    size_t nPathEnd = 0;
+	TCHAR szPathTemp[_MAX_PATH + 1] = _T("");
+	HRESULT hr = E_FAIL;
+	LCID lcidFound = (LCID)-1;
+	size_t nPathEnd = 0;
 
-    // Gotta have this stuff!
-	if (szPath==NULL || *szPath == '\0')	   
-	{ 
-		return E_POINTER; 
-	}
-
-    if (szDllName==NULL || *szDllName == '\0') 
-	{ 
-		return E_POINTER; 
-	}
-
-    if (!szPath || !*szPath || !szDllName || !*szDllName)
+	// Gotta have this stuff!
+	if (szPath == NULL || *szPath == '\0')
 	{
-        return E_INVALIDARG;
+		return E_POINTER;
 	}
 
-    if (phinstOut != NULL)
-    {
-        *phinstOut = NULL;
-    }
-
-    szPathTemp[_MAX_PATH-1] = L'\0';
-
-    // Add \ to the end if necessary
-    _tcsncpy_s(szPathTemp,_countof(szPathTemp), szPath, _TRUNCATE);
-    if (szPathTemp[_TCSNLEN(szPathTemp, _MAX_PATH-1) - 1] != L'\\')
-    {
-        _tcsncat_s(szPathTemp,_countof(szPathTemp), _T("\\"), PATHLEFT(szPathTemp));
-    }
-
-    // Check if given path even exists
-    if (GetFileAttributes(szPathTemp) == 0xFFFFFFFF)
+	if (szDllName == NULL || *szDllName == '\0')
 	{
-        return E_FAIL;
+		return E_POINTER;
 	}
 
-    nPathEnd = _TCSNLEN(szPathTemp, _MAX_PATH-1);
-    
-    {	        
-		LANGID langid=0;
+	if (!szPath || !*szPath || !szDllName || !*szDllName)
+	{
+		return E_INVALIDARG;
+	}
+
+	if (phinstOut != NULL)
+	{
+		*phinstOut = NULL;
+	}
+
+	szPathTemp[_MAX_PATH - 1] = L'\0';
+
+	// Add \ to the end if necessary
+	_tcsncpy_s(szPathTemp, _countof(szPathTemp), szPath, _TRUNCATE);
+	if (szPathTemp[_TCSNLEN(szPathTemp, _MAX_PATH - 1) - 1] != L'\\')
+	{
+		_tcsncat_s(szPathTemp, _countof(szPathTemp), _T("\\"), PATHLEFT(szPathTemp));
+	}
+
+	// Check if given path even exists
+	if (GetFileAttributes(szPathTemp) == 0xFFFFFFFF)
+	{
+		return E_FAIL;
+	}
+
+	nPathEnd = _TCSNLEN(szPathTemp, _MAX_PATH - 1);
+
+	{
+		LANGID langid = 0;
 		if (FAILED(GetUserDefaultUILanguageLegacyCompat(&langid)))
 		{
 			return E_UNEXPECTED;
 		}
-        const LCID lcidUser = MAKELCID(langid, SORT_DEFAULT);
-        
-        LCID rglcid[3];
-        rglcid[0] = lcidUser;
-        rglcid[1] = MAKELCID(MAKELANGID(PRIMARYLANGID(lcidUser), SUBLANG_DEFAULT), SORTIDFROMLCID(lcidUser));
-        rglcid[2] = 0x409;
-        for (unsigned int i = 0; i < _countof(rglcid); i++)
-        {
-            TCHAR szNumBuf[10];
-            
-            // Check if it's the same as any LCID already checked,
-            // which is very possible
-            unsigned int n = 0;
-            for (n = 0; n < i; n++)
-            {
-                if (rglcid[n] == rglcid[i])
-                    break;
-            }
+		const LCID lcidUser = MAKELCID(langid, SORT_DEFAULT);
 
-            if (n < i)
+		LCID rglcid[3];
+		rglcid[0] = lcidUser;
+		rglcid[1] = MAKELCID(MAKELANGID(PRIMARYLANGID(lcidUser), SUBLANG_DEFAULT), SORTIDFROMLCID(lcidUser));
+		rglcid[2] = 0x409;
+		for (unsigned int i = 0; i < _countof(rglcid); i++)
+		{
+			TCHAR szNumBuf[10];
+
+			// Check if it's the same as any LCID already checked,
+			// which is very possible
+			unsigned int n = 0;
+			for (n = 0; n < i; n++)
 			{
-                continue;
+				if (rglcid[n] == rglcid[i])
+					break;
 			}
-            
-            szPathTemp[nPathEnd] = L'\0';
-			_itot_s(rglcid[i], szNumBuf,_countof(szNumBuf), 10);
-            _tcsncat_s(szPathTemp, _countof(szPathTemp),szNumBuf , PATHLEFT(szPathTemp));
-            _tcsncat_s(szPathTemp,_countof(szPathTemp), _T("\\"), PATHLEFT(szPathTemp));
-            _tcsncat_s(szPathTemp,_countof(szPathTemp), szDllName, PATHLEFT(szPathTemp));
 
-            if (GetFileAttributes(szPathTemp) != 0xFFFFFFFF)
-            {
-                lcidFound = rglcid[i];
+			if (n < i)
+			{
+				continue;
+			}
 
-                hr = S_OK;
-                goto Done;
-            }
-        }
-    }
+			szPathTemp[nPathEnd] = L'\0';
+			_itot_s(rglcid[i], szNumBuf, _countof(szNumBuf), 10);
+			_tcsncat_s(szPathTemp, _countof(szPathTemp), szNumBuf, PATHLEFT(szPathTemp));
+			_tcsncat_s(szPathTemp, _countof(szPathTemp), _T("\\"), PATHLEFT(szPathTemp));
+			_tcsncat_s(szPathTemp, _countof(szPathTemp), szDllName, PATHLEFT(szPathTemp));
 
-    // None of the default choices exists, so now look for the dll in a folder below
+			if (GetFileAttributes(szPathTemp) != 0xFFFFFFFF)
+			{
+				lcidFound = rglcid[i];
+
+				hr = S_OK;
+				goto Done;
+			}
+		}
+	}
+
+	// None of the default choices exists, so now look for the dll in a folder below
 	//the given path (szPath)
-    {        
-        szPathTemp[nPathEnd] = L'\0';
-        _tcsncat_s(szPathTemp,_countof(szPathTemp), _T("*.*"), PATHLEFT(szPathTemp));
+	{
+		szPathTemp[nPathEnd] = L'\0';
+		_tcsncat_s(szPathTemp, _countof(szPathTemp), _T("*.*"), PATHLEFT(szPathTemp));
 
 		WIN32_FIND_DATA wfdw;
-        HANDLE hDirs = FindFirstFile(szPathTemp, &wfdw);
-        nPathEnd = _TCSNLEN(szPathTemp, _MAX_PATH-1)-3;
-        if (hDirs != INVALID_HANDLE_VALUE)
-        {
-            while (FindNextFile(hDirs, &wfdw))
-            {
-                // We are only interested in directories, since at this level, that should
-                // be the only thing in this directory, i.e, LCID sub dirs
-                if (wfdw.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                {
-                    // Skip current and previous dirs, "." and ".."
-                    if (!_tcscmp(wfdw.cFileName, _T(".")) || !_tcscmp(wfdw.cFileName, _T("..")))
-                        continue;
+		HANDLE hDirs = FindFirstFile(szPathTemp, &wfdw);
+		nPathEnd = _TCSNLEN(szPathTemp, _MAX_PATH - 1) - 3;
+		if (hDirs != INVALID_HANDLE_VALUE)
+		{
+			while (FindNextFile(hDirs, &wfdw))
+			{
+				// We are only interested in directories, since at this level, that should
+				// be the only thing in this directory, i.e, LCID sub dirs
+				if (wfdw.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+				{
+					// Skip current and previous dirs, "." and ".."
+					if (!_tcscmp(wfdw.cFileName, _T(".")) || !_tcscmp(wfdw.cFileName, _T("..")))
+						continue;
 
-                    // Does this dir have a copy of the dll?
-                    szPathTemp[nPathEnd] = L'\0';
-                    _tcsncat_s(szPathTemp,_countof(szPathTemp), wfdw.cFileName, PATHLEFT(szPathTemp));
-                    _tcsncat_s(szPathTemp,_countof(szPathTemp), _T("\\"), PATHLEFT(szPathTemp));
-                    _tcsncat_s(szPathTemp,_countof(szPathTemp), szDllName, PATHLEFT(szPathTemp));
+					// Does this dir have a copy of the dll?
+					szPathTemp[nPathEnd] = L'\0';
+					_tcsncat_s(szPathTemp, _countof(szPathTemp), wfdw.cFileName, PATHLEFT(szPathTemp));
+					_tcsncat_s(szPathTemp, _countof(szPathTemp), _T("\\"), PATHLEFT(szPathTemp));
+					_tcsncat_s(szPathTemp, _countof(szPathTemp), szDllName, PATHLEFT(szPathTemp));
 
-                    if (GetFileAttributes(szPathTemp) != 0xFFFFFFFF)
-                    {
-                        // Got it!
-                        lcidFound = (LCID)_tstol(wfdw.cFileName);
+					if (GetFileAttributes(szPathTemp) != 0xFFFFFFFF)
+					{
+						// Got it!
+						lcidFound = (LCID)_tstol(wfdw.cFileName);
 
-                        hr = S_OK;
-                        break;
-                    }
-                }
-            }
+						hr = S_OK;
+						break;
+					}
+				}
+			}
 
-            FindClose(hDirs);
-        }
-    }
+			FindClose(hDirs);
+		}
+	}
 
 Done:
-    if (SUCCEEDED(hr))
-    {
-        // Set the default LCID
-        if (plcidOut)
-        {
-			if (lcidFound == (LCID)-1) 
-			{ 
-				return E_UNEXPECTED; 
-			}
-            *plcidOut = lcidFound;
-        }
-
-        // Finally, attempt to load the library
-        // Beware!  A dll loaded with LOAD_LIBRARY_AS_DATAFILE won't
-        // let you use LoadIcon and things like that (only general calls like
-        // FindResource and LoadResource).
-        if (phinstOut != NULL)
-        {
-            *phinstOut = LoadLibraryEx(szPathTemp, NULL, dwExFlags);
-            hr = (*phinstOut) ? S_OK : E_FAIL;
-        }
-        if ( szFullPathOut )
+	if (SUCCEEDED(hr))
+	{
+		// Set the default LCID
+		if (plcidOut)
 		{
-            _tcsncpy_s(szFullPathOut,sizeInCharacters, szPathTemp, _MAX_PATH-1);
+			if (lcidFound == (LCID)-1)
+			{
+				return E_UNEXPECTED;
+			}
+			*plcidOut = lcidFound;
 		}
-    }
- 
-    return hr;
+
+		// Finally, attempt to load the library
+		// Beware!  A dll loaded with LOAD_LIBRARY_AS_DATAFILE won't
+		// let you use LoadIcon and things like that (only general calls like
+		// FindResource and LoadResource).
+		if (phinstOut != NULL)
+		{
+			*phinstOut = LoadLibraryEx(szPathTemp, NULL, dwExFlags);
+			hr = (*phinstOut) ? S_OK : E_FAIL;
+		}
+		if (szFullPathOut)
+		{
+			_tcsncpy_s(szFullPathOut, sizeInCharacters, szPathTemp, _MAX_PATH - 1);
+		}
+	}
+
+	return hr;
 }
 //////////////////////////////////////////////////////////////////////////
 //Purpose: Iterates env("PATH") directories to try to find (using LoadUILibrary)
@@ -336,63 +346,65 @@ Done:
 //		  size_t sizeInCharacters - buffer size in characters
 //Returns: Success - HMODULE of found dll, Failure - NULL
 //////////////////////////////////////////////////////////////////////////
-HMODULE LoadSearchPath(LPCTSTR szDllName,TCHAR *szPathOut, size_t sizeInCharacters)
+HMODULE LoadSearchPath(LPCTSTR szDllName, TCHAR *szPathOut, size_t sizeInCharacters)
 {
-    TCHAR * szEnvPATH = NULL;
-	TCHAR * szEnvPATHBuff = NULL;    
-    int nPathLen = 0;
-    int nPathIndex = 0;
-    HMODULE hmod = NULL;	
-    if (DuplicateEnvString(&szEnvPATHBuff,NULL,_T("PATH"))==0 && (szEnvPATH=szEnvPATHBuff) != NULL) 
+	TCHAR * szEnvPATH = NULL;
+	TCHAR * szEnvPATHBuff = NULL;
+	int nPathLen = 0;
+	int nPathIndex = 0;
+	HMODULE hmod = NULL;
+	if (DuplicateEnvString(&szEnvPATHBuff, NULL, _T("PATH")) == 0 && (szEnvPATH = szEnvPATHBuff) != NULL)
 	{
-        while (*szEnvPATH) 
+		while (*szEnvPATH)
 		{
-            /* skip leading white space and nop semicolons */
-            for (; *szEnvPATH == L' ' || *szEnvPATH == L';'; ++szEnvPATH)
-            {} /* NOTHING */
-
-            if (*szEnvPATH == L'\0')
+			/* skip leading white space and nop semicolons */
+			for (; *szEnvPATH == L' ' || *szEnvPATH == L';'; ++szEnvPATH)
 			{
-                break;
+			} /* NOTHING */
+
+			if (*szEnvPATH == L'\0')
+			{
+				break;
 			}
 
-            ++nPathIndex;
+			++nPathIndex;
 
-            /* copy this chunk of the path into our trypath */
-            nPathLen = 0;
-			TCHAR szPath[_MAX_PATH+1];
+			/* copy this chunk of the path into our trypath */
+			nPathLen = 0;
+			TCHAR szPath[_MAX_PATH + 1];
 			TCHAR * pszTry = NULL;
-            for (pszTry = szPath; *szEnvPATH != L'\0' && *szEnvPATH != L';'; ++szEnvPATH) 
+			for (pszTry = szPath; *szEnvPATH != L'\0' && *szEnvPATH != L';'; ++szEnvPATH)
 			{
 				++nPathLen;
-                if (nPathLen < _MAX_PATH) 
-				{                    
-                    *pszTry++ = *szEnvPATH;
-                } else 
+				if (nPathLen < _MAX_PATH)
 				{
-                    break;
-                }
-            }
-            *pszTry = L'\0';
+					*pszTry++ = *szEnvPATH;
+				}
+				else
+				{
+					break;
+				}
+			}
+			*pszTry = L'\0';
 
-            if (nPathLen == 0 || nPathLen >= _MAX_PATH)
+			if (nPathLen == 0 || nPathLen >= _MAX_PATH)
 			{
-                continue;
+				continue;
 			}
 
-            LoadUILibrary(szPath, szDllName, LOAD_LIBRARY_AS_DATAFILE, 
-                          &hmod, szPathOut,sizeInCharacters, NULL);
-            if ( hmod )
+			LoadUILibrary(szPath, szDllName, LOAD_LIBRARY_AS_DATAFILE,
+				&hmod, szPathOut, sizeInCharacters, NULL);
+			if (hmod)
 			{
-                break;
+				break;
 			}
-        }
-    }
-	if (szEnvPATHBuff!=NULL)
-	{
-		delete [] szEnvPATHBuff;
+		}
 	}
-    return hmod;
+	if (szEnvPATHBuff != NULL)
+	{
+		delete[] szEnvPATHBuff;
+	}
+	return hmod;
 }
 //Example: Say PATH="c:\bin;d:\win", resource dll name (szDllName) is "ToolUI.dll",
 //		   user locale is 936, and the .exe calling LoadLocResDll is c:\MyTools\Tool.exe
@@ -410,41 +422,41 @@ HMODULE LoadSearchPath(LPCTSTR szDllName,TCHAR *szPathOut, size_t sizeInCharacte
 //			Note: The primary lang (without the sublang) is tested after the user ui lang.
 // Main Input: szDllName - the name of the resource dll <ToolName>ui.dll. Ex: vcdeployUI.dll
 // Main Output: HMODULE of resource dll or NULL - if not found (see bExeDefaultModule).
-HMODULE LoadLocResDll(LPCTSTR szDllName,BOOL bExeDefaultModule=TRUE,DWORD dwExFlags=LOAD_LIBRARY_AS_DATAFILE,LPTSTR pszPathOut = NULL,size_t sizeInCharacters = 0  )
+HMODULE LoadLocResDll(LPCTSTR szDllName, BOOL bExeDefaultModule = TRUE, DWORD dwExFlags = LOAD_LIBRARY_AS_DATAFILE, LPTSTR pszPathOut = NULL, size_t sizeInCharacters = 0)
 {
-    HMODULE hmod = NULL;
-    TCHAR driverpath[_MAX_PATH + 1], exepath[_MAX_PATH + 1];
-    LPTSTR p = NULL;
-    
-    memset(driverpath,0,_MAX_PATH + 1);
-    GetModuleFileName(GetModuleHandle(NULL), driverpath, _MAX_PATH);
-    // find path of tool
-    p = driverpath + _TCSNLEN(driverpath, _MAX_PATH-1)-1;
-    while ( *p != L'\\' && p != driverpath)
+	HMODULE hmod = NULL;
+	TCHAR driverpath[_MAX_PATH + 1], exepath[_MAX_PATH + 1];
+	LPTSTR p = NULL;
+
+	memset(driverpath, 0, _MAX_PATH + 1);
+	GetModuleFileName(GetModuleHandle(NULL), driverpath, _MAX_PATH);
+	// find path of tool
+	p = driverpath + _TCSNLEN(driverpath, _MAX_PATH - 1) - 1;
+	while (*p != L'\\' && p != driverpath)
 	{
-        p--;
+		p--;
 	}
-    *p = '\0';
+	*p = '\0';
 
-    LoadUILibrary(driverpath, szDllName, dwExFlags, 
-                  &hmod, exepath,_countof(exepath), NULL);
+	LoadUILibrary(driverpath, szDllName, dwExFlags,
+		&hmod, exepath, _countof(exepath), NULL);
 
-    if ( hmod == NULL ) 
+	if (hmod == NULL)
 	{
-        // search PATH\<lcid> for <ToolName>ui.dll
-        hmod = LoadSearchPath(szDllName,exepath,_countof(exepath));
-    }
+		// search PATH\<lcid> for <ToolName>ui.dll
+		hmod = LoadSearchPath(szDllName, exepath, _countof(exepath));
+	}
 
-    if ( hmod && pszPathOut )
+	if (hmod && pszPathOut)
 	{
-        _tcsncpy_s(pszPathOut,sizeInCharacters, exepath, _MAX_PATH-1);
+		_tcsncpy_s(pszPathOut, sizeInCharacters, exepath, _MAX_PATH - 1);
 	}
 	//Not found dll, return the exe HINSTANCE as a fallback.
 	if (hmod == NULL && bExeDefaultModule)
 	{
-		hmod=GetModuleHandle(NULL);
+		hmod = GetModuleHandle(NULL);
 	}
-    return hmod;
+	return hmod;
 }
 //End loc routines
 ////////////////////////////////////////////////////////////////////
@@ -476,7 +488,7 @@ CWebDbgApp theApp;
 
 
 class CPipeSecurityInformation : public CComObjectRootEx<CComSingleThreadModel>,
-		public ISecurityInformation
+	public ISecurityInformation
 {
 public:
 	HANDLE m_hObject;
@@ -496,7 +508,7 @@ public:
 		memset(m_access, 0x00, sizeof(m_access));
 		m_access[0].dwFlags = SI_ACCESS_GENERAL;
 		m_access[0].pszName = MAKEINTRESOURCEW(IDS_ACCESS_PIPE);
-		m_access[0].mask = FILE_GENERIC_WRITE|FILE_GENERIC_READ;
+		m_access[0].mask = FILE_GENERIC_WRITE | FILE_GENERIC_READ;
 
 		m_hObject = hObject;
 		try
@@ -520,19 +532,19 @@ public:
 		COM_INTERFACE_ENTRY_IID(IID_ISecurityInformation, ISecurityInformation)
 	END_COM_MAP()
 
-    // *** ISecurityInformation methods ***
-    STDMETHOD(GetObjectInformation)(PSI_OBJECT_INFO pObjectInfo)
+	// *** ISecurityInformation methods ***
+	STDMETHOD(GetObjectInformation)(PSI_OBJECT_INFO pObjectInfo)
 	{
-		pObjectInfo->dwFlags = SI_EDIT_PERMS|SI_OWNER_READONLY;
+		pObjectInfo->dwFlags = SI_EDIT_PERMS | SI_OWNER_READONLY;
 		pObjectInfo->hInstance = AfxGetResourceHandle();
 		pObjectInfo->pszServerName = NULL;
 		pObjectInfo->pszObjectName = const_cast<LPWSTR>(static_cast<LPCWSTR>(m_strObjectName));
 		return S_OK;
 	}
 
-    STDMETHOD(GetSecurity)(SECURITY_INFORMATION /*RequestedInformation*/,
-                            PSECURITY_DESCRIPTOR *ppSecurityDescriptor,
-                            BOOL fDefault)
+	STDMETHOD(GetSecurity)(SECURITY_INFORMATION /*RequestedInformation*/,
+		PSECURITY_DESCRIPTOR *ppSecurityDescriptor,
+		BOOL fDefault)
 	{
 		HRESULT hr;
 
@@ -550,7 +562,7 @@ public:
 		try
 		{
 			pSecDescToCopy->GetSECURITY_DESCRIPTOR(NULL, &dwSize);
-			pSecDesc = (SECURITY_DESCRIPTOR *) LocalAlloc(LHND, dwSize);
+			pSecDesc = (SECURITY_DESCRIPTOR *)LocalAlloc(LHND, dwSize);
 			if (!pSecDesc)
 				return E_OUTOFMEMORY;
 			pSecDescToCopy->GetSECURITY_DESCRIPTOR(pSecDesc, &dwSize);
@@ -566,8 +578,8 @@ public:
 		return S_OK;
 	}
 
-    STDMETHOD(SetSecurity)(SECURITY_INFORMATION SecurityInformation,
-                            PSECURITY_DESCRIPTOR pSecurityDescriptor)
+	STDMETHOD(SetSecurity)(SECURITY_INFORMATION SecurityInformation,
+		PSECURITY_DESCRIPTOR pSecurityDescriptor)
 	{
 		if (!pSecurityDescriptor)
 			return E_POINTER;
@@ -575,7 +587,7 @@ public:
 		try
 		{
 			CSecurityDesc secDesc(*static_cast<SECURITY_DESCRIPTOR*>(pSecurityDescriptor));
-			
+
 			secDesc.MakeAbsolute();
 
 			const SECURITY_DESCRIPTOR *pTempSecDesc = secDesc.GetPSECURITY_DESCRIPTOR();
@@ -598,44 +610,44 @@ public:
 		return S_OK;
 	}
 
-    STDMETHOD(GetAccessRights) (const GUID* pguidObjectType,
-                                DWORD /*dwFlags*/,
-                                PSI_ACCESS *ppAccess,
-                                ULONG *pcAccesses,
-                                ULONG *piDefaultAccess)
+	STDMETHOD(GetAccessRights) (const GUID* pguidObjectType,
+		DWORD /*dwFlags*/,
+		PSI_ACCESS *ppAccess,
+		ULONG *pcAccesses,
+		ULONG *piDefaultAccess)
 	{
 		if (pguidObjectType && !InlineIsEqualGUID(*pguidObjectType, GUID_NULL))
 			return E_INVALIDARG;
-		
+
 		*ppAccess = m_access;
-		*pcAccesses = sizeof(m_access)/sizeof(m_access[0]);
+		*pcAccesses = sizeof(m_access) / sizeof(m_access[0]);
 		*piDefaultAccess = 0;
 		return S_OK;
 	}
 
-    STDMETHOD(MapGeneric) (const GUID *pguidObjectType,
-                           UCHAR * /*pAceFlags*/,
-                           ACCESS_MASK *pMask)
+	STDMETHOD(MapGeneric) (const GUID *pguidObjectType,
+		UCHAR * /*pAceFlags*/,
+		ACCESS_MASK *pMask)
 	{
 		if (pguidObjectType && !InlineIsEqualGUID(*pguidObjectType, GUID_NULL))
 			return E_INVALIDARG;
 		GENERIC_MAPPING mapping;
-		mapping.GenericAll = FILE_WRITE_DATA|FILE_READ_DATA|FILE_CREATE_PIPE_INSTANCE;
-		mapping.GenericWrite = FILE_WRITE_DATA|FILE_CREATE_PIPE_INSTANCE;
-		mapping.GenericRead = FILE_READ_DATA|FILE_CREATE_PIPE_INSTANCE;
+		mapping.GenericAll = FILE_WRITE_DATA | FILE_READ_DATA | FILE_CREATE_PIPE_INSTANCE;
+		mapping.GenericWrite = FILE_WRITE_DATA | FILE_CREATE_PIPE_INSTANCE;
+		mapping.GenericRead = FILE_READ_DATA | FILE_CREATE_PIPE_INSTANCE;
 		mapping.GenericExecute = 0;
 		::MapGenericMask(pMask, &mapping);
 		return S_OK;
 	}
-    
+
 	STDMETHOD(GetInheritTypes) (PSI_INHERIT_TYPE *ppInheritTypes,
-                                ULONG *pcInheritTypes)
+		ULONG *pcInheritTypes)
 	{
 		if (!ppInheritTypes)
 			return E_POINTER;
 
 		*ppInheritTypes = NULL;
-		
+
 		if (!pcInheritTypes)
 			return E_POINTER;
 
@@ -643,7 +655,7 @@ public:
 		return S_OK;
 	}
 
-    STDMETHOD(PropertySheetPageCallback)(HWND /*hwnd*/, UINT /*uMsg*/, SI_PAGE_TYPE /*uPage*/)
+	STDMETHOD(PropertySheetPageCallback)(HWND /*hwnd*/, UINT /*uMsg*/, SI_PAGE_TYPE /*uPage*/)
 	{
 		return S_OK;
 	}
@@ -666,25 +678,25 @@ UINT PipeServerThread(void* /* pvContext */)
 	ULONG cbSize = 2048;
 	HKEY hKey;
 	RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\AeDebug"), 0, KEY_READ, &hKey);
-	RegQueryValueEx(hKey, _T("Debugger"), NULL, NULL, (unsigned char*) lpszDebugger, &cbSize);
-    lpszDebugger[2047] = 0;
+	RegQueryValueEx(hKey, _T("Debugger"), NULL, NULL, (unsigned char*)lpszDebugger, &cbSize);
+	lpszDebugger[2047] = 0;
 
 
 	//Extract the name of the executable and the command line parameters
 	//NOTE: I don't think this is portable
 
 	//Skip the "
-	int nDi = 0; 
+	int nDi = 0;
 	int nEi = 0;
 	int nCi = 0;
 	BOOL bBreakOnSpace = TRUE;
 
 	//If the string starts with a ", don't break on space
-	if (lpszDebugger[nDi] == _T('\"')) 
+	if (lpszDebugger[nDi] == _T('\"'))
 	{
 		bBreakOnSpace = FALSE;
 		nDi++;
-	}	
+	}
 
 	//Get the executable string
 	while (nEi < 255)
@@ -696,7 +708,7 @@ UINT PipeServerThread(void* /* pvContext */)
 			break;
 		lpszExe[nEi++] = ch;
 	}
-	
+
 	//Make sure it's null terminated
 	lpszExe[nEi] = '\0';
 
@@ -708,8 +720,8 @@ UINT PipeServerThread(void* /* pvContext */)
 		if (lpszCommandLine[nCi++] == '\0')
 			break;
 	}
-    // Null terminate, just in case
-    lpszCommandLine[nCi] = '\0';
+	// Null terminate, just in case
+	lpszCommandLine[nCi] = '\0';
 
 	//intialize STARTUPINFO structure for CreateProcess
 	STARTUPINFO startInfo;
@@ -734,23 +746,23 @@ UINT PipeServerThread(void* /* pvContext */)
 	LPTSTR szClientName;
 	TCHAR szStackInfo[1025];
 	CString strStackTrace;
-	TCHAR szComputerName[MAX_COMPUTERNAME_LENGTH+1];
-	DWORD dwComputerNameLen = sizeof(szComputerName)/sizeof(TCHAR);
+	TCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+	DWORD dwComputerNameLen = sizeof(szComputerName) / sizeof(TCHAR);
 	GetComputerName(szComputerName, &dwComputerNameLen);
-	
+
 	while (1)
 	{
 		strStackTrace.Empty();
 		ConnectNamedPipe(hPipe, NULL);
-		
+
 		//Read the DEBUG_SERVER_MESSAGE structure from the pipe 
 		BOOL bRet = ReadFile(hPipe, &Message, sizeof(Message), &dwRead, NULL);
 
 		if (!bRet)
 		{
-//			TCHAR szErr[256];
-//			sprintf(szErr, _T("Cannot Read From Pipe\r\nGetLastError() returned %d"), GetLastError());
-//			theApp.m_pMainWnd->MessageBox(szErr, _T("Error"), MB_OK);
+			//			TCHAR szErr[256];
+			//			sprintf(szErr, _T("Cannot Read From Pipe\r\nGetLastError() returned %d"), GetLastError());
+			//			theApp.m_pMainWnd->MessageBox(szErr, _T("Error"), MB_OK);
 			DisconnectNamedPipe(hPipe);
 			continue;
 		}
@@ -764,28 +776,28 @@ UINT PipeServerThread(void* /* pvContext */)
 
 		//Attempt to read the assert or trace text from the pipe
 		szClientName = (LPTSTR)malloc(sizeof(TCHAR)*Message.dwClientNameLen);
-                ATLENSURE(szClientName != NULL);
+		ATLENSURE(szClientName != NULL);
 
 		bRet = ReadFile(hPipe, szClientName, Message.dwClientNameLen, &dwRead, NULL);
 		if (!bRet)
 		{
 			DisconnectNamedPipe(hPipe);
-            free(szClientName);
+			free(szClientName);
 			continue;
 		}
 
 		//Attempt to read the assert or trace text from the pipe
 		szMessage = (LPTSTR)malloc(sizeof(TCHAR)*Message.dwTextLen);
 		ATLENSURE(szMessage != NULL);
-		bRet = ReadFile(hPipe, szMessage, Message.dwTextLen, &dwRead, NULL);
+		bRet = ReadFile(hPipe, szMessage, static_cast<DWORD>(Message.dwTextLen), &dwRead, NULL);
 		if (!bRet)
 		{
-//			TCHAR szErr[256];
-//			sprintf(szErr, _T("Cannot Read From Pipe\r\nGetLastError() returned %d"), GetLastError());
-//			theApp.m_pMainWnd->MessageBox(szErr, _T("Error"), MB_OK);
+			//			TCHAR szErr[256];
+			//			sprintf(szErr, _T("Cannot Read From Pipe\r\nGetLastError() returned %d"), GetLastError());
+			//			theApp.m_pMainWnd->MessageBox(szErr, _T("Error"), MB_OK);
 			DisconnectNamedPipe(hPipe);
-            free(szClientName);
-            free(szMessage);
+			free(szClientName);
+			free(szMessage);
 			continue;
 		}
 
@@ -798,9 +810,9 @@ UINT PipeServerThread(void* /* pvContext */)
 		{
 			threadMessage.nMsgType = HPS_ASSERT_MESSAGE;
 		}
-		
+
 		theApp.m_pMainWnd->SendMessage(WM_USER, (WPARAM)szMessage, (LPARAM)&threadMessage);
-		int nRet = threadMessage.nRet;
+		INT_PTR nRet = threadMessage.nRet;
 
 		//If we want stack trace information
 		if (nRet == IDOK)
@@ -818,9 +830,9 @@ UINT PipeServerThread(void* /* pvContext */)
 						//So clean up and return
 						DisconnectNamedPipe(hPipe);
 						CloseHandle(threadMessage.hEvent);
-                        free(szClientName);
-                        free(szMessage);
-                        return 0;
+						free(szClientName);
+						free(szMessage);
+						return 0;
 					}
 					//concatenate
 					strStackTrace += szStackInfo;
@@ -836,62 +848,62 @@ UINT PipeServerThread(void* /* pvContext */)
 			dlg.InitData(threadMessage.nMsgType, Message.dwProcessId, szMessage, strStackTrace);
 			nRet = dlg.DoModal();
 		}
-        free(szClientName);
-        free(szMessage);
+		free(szClientName);
+		free(szMessage);
 
 		switch (nRet)
 		{
-			case IDRETRY:
+		case IDRETRY:
+		{
+			if (!Message.bIsDebuggerAttached)
 			{
-				if (!Message.bIsDebuggerAttached)
-				{
-					SECURITY_ATTRIBUTES sa;
-					sa.nLength = sizeof(sa);
-					sa.lpSecurityDescriptor = NULL;
-					sa.bInheritHandle = TRUE;
-					HANDLE hEvent = CreateEvent(&sa, TRUE, FALSE, NULL);
+				SECURITY_ATTRIBUTES sa;
+				sa.nLength = sizeof(sa);
+				sa.lpSecurityDescriptor = NULL;
+				sa.bInheritHandle = TRUE;
+				HANDLE hEvent = CreateEvent(&sa, TRUE, FALSE, NULL);
 
-					//Build the command line with the processId and event
-					TCHAR lpszCmdLine[550];
-					_stprintf_s(lpszCmdLine, sizeof(lpszCmdLine)/sizeof(TCHAR), lpszCommandLine, Message.dwProcessId, hEvent);
+				//Build the command line with the processId and event
+				TCHAR lpszCmdLine[550];
+				_stprintf_s(lpszCmdLine, sizeof(lpszCmdLine) / sizeof(TCHAR), lpszCommandLine, Message.dwProcessId, hEvent);
 
-					PROCESS_INFORMATION processInfo;
-					bRet = CreateProcess(lpszExe, lpszCmdLine, NULL, NULL, TRUE, 
-						CREATE_DEFAULT_ERROR_MODE |CREATE_NEW_PROCESS_GROUP | NORMAL_PRIORITY_CLASS, 
-						NULL, NULL, &startInfo, &processInfo);
+				PROCESS_INFORMATION processInfo;
+				bRet = CreateProcess(lpszExe, lpszCmdLine, NULL, NULL, TRUE,
+					CREATE_DEFAULT_ERROR_MODE | CREATE_NEW_PROCESS_GROUP | NORMAL_PRIORITY_CLASS,
+					NULL, NULL, &startInfo, &processInfo);
 
-					//We don't need these
-					CloseHandle(processInfo.hProcess);
-					CloseHandle(processInfo.hThread);
+				//We don't need these
+				CloseHandle(processInfo.hProcess);
+				CloseHandle(processInfo.hThread);
 
-					theApp.m_pMainWnd->SetForegroundWindow();
-					WaitForSingleObject(hEvent, 60000);
+				theApp.m_pMainWnd->SetForegroundWindow();
+				WaitForSingleObject(hEvent, 60000);
 
-					CloseHandle(hEvent);
-				}
-				nRet = 1;
-				break;
+				CloseHandle(hEvent);
 			}
-			case IDABORT:
-			{
-				nRet = 2;
-				break;
-			}
-			case IDCANCEL:
-			case IDIGNORE:
-			{
-				nRet = 0;
-				break;
-			}
+			nRet = 1;
+			break;
 		}
-		
+		case IDABORT:
+		{
+			nRet = 2;
+			break;
+		}
+		case IDCANCEL:
+		case IDIGNORE:
+		{
+			nRet = 0;
+			break;
+		}
+		}
+
 		//Write the return value back to the pipe
 		bRet = WriteFile(hPipe, &nRet, sizeof(nRet), &dwRead, NULL);
 		if (!bRet)
 		{
-//			TCHAR szErr[256];
-//			sprintf(szErr, _T("Cannot Write To Pipe\r\nGetLastError() returned %d"), GetLastError());
-//			theApp.m_pMainWnd->MessageBox(szErr, _T("Error"), MB_OK);
+			//			TCHAR szErr[256];
+			//			sprintf(szErr, _T("Cannot Write To Pipe\r\nGetLastError() returned %d"), GetLastError());
+			//			theApp.m_pMainWnd->MessageBox(szErr, _T("Error"), MB_OK);
 			DisconnectNamedPipe(hPipe);
 			continue;
 		}
@@ -937,18 +949,18 @@ BOOL CWebDbgApp::InitInstance()
 	// such as the name of your company or organization.
 	SetRegistryKey(_T("HPS"));
 
-	
+
 	BOOL bFound = FALSE;
-    m_hMutexOneInstance = CreateMutex(NULL,TRUE,_T("WebDbgOneInstanceOnly"));
-    if(GetLastError() == ERROR_ALREADY_EXISTS)
-        bFound = TRUE;
-    if(m_hMutexOneInstance) 
-        ReleaseMutex(m_hMutexOneInstance);
-	
+	m_hMutexOneInstance = CreateMutex(NULL, TRUE, _T("WebDbgOneInstanceOnly"));
+	if (GetLastError() == ERROR_ALREADY_EXISTS)
+		bFound = TRUE;
+	if (m_hMutexOneInstance)
+		ReleaseMutex(m_hMutexOneInstance);
+
 
 	if (!bFound)
 	{
-		HINSTANCE hInstRes=LoadLocResDll(szWebDbgUIDll,TRUE,0); //Do not load resource dll as data file (bitmaps,icons).
+		HINSTANCE hInstRes = LoadLocResDll(szWebDbgUIDll, TRUE, 0); //Do not load resource dll as data file (bitmaps,icons).
 		AfxSetResourceHandle(hInstRes);
 		// To create the main window, this code creates a new frame window
 		// object and then sets it as the application's main window object.
@@ -979,9 +991,9 @@ BOOL CWebDbgApp::InitInstance()
 BOOL CWebDbgApp::CreatePipe()
 {
 	m_hPipe = CreateNamedPipe(theApp.GetPipeName(),
-		PIPE_ACCESS_DUPLEX | WRITE_DAC, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT, 
+		PIPE_ACCESS_DUPLEX | WRITE_DAC, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
 		PIPE_UNLIMITED_INSTANCES, 1024, 4096, 20000, NULL);
-	
+
 	if (m_hPipe == INVALID_HANDLE_VALUE)
 	{
 		AfxMessageBox(IDS_FAILED_CREATING_PIPE, MB_ICONSTOP);
@@ -999,7 +1011,7 @@ BOOL CWebDbgApp::CreatePipe()
 
 void CWebDbgApp::BeginPipeThread()
 {
-	AfxBeginThread(PipeServerThread, (void*) GetCurrentThreadId());
+	AfxBeginThread(PipeServerThread, reinterpret_cast<LPVOID>(static_cast<UINT_PTR>(GetCurrentThreadId())));
 }
 
 void CWebDbgApp::QuitPipeThread()
@@ -1040,14 +1052,14 @@ class CAboutDlg : public CDialog
 public:
 	CAboutDlg();
 
-// Dialog Data
-	//{{AFX_DATA(CAboutDlg)
+	// Dialog Data
+		//{{AFX_DATA(CAboutDlg)
 	enum { IDD = IDD_ABOUTBOX };
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CAboutDlg)
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL
 
@@ -1088,7 +1100,7 @@ void CWebDbgApp::OnAppAbout()
 /////////////////////////////////////////////////////////////////////////////
 // CWebDbgApp message handlers
 
-void CWebDbgApp::OnViewStacktrace() 
+void CWebDbgApp::OnViewStacktrace()
 {
 	m_bWantStackTrace = !m_bWantStackTrace;
 }
@@ -1099,7 +1111,7 @@ BOOL CWebDbgApp::WantStackTrace()
 	return m_bWantStackTrace;
 }
 
-void CWebDbgApp::OnUpdateViewStacktrace(CCmdUI* pCmdUI) 
+void CWebDbgApp::OnUpdateViewStacktrace(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_bWantStackTrace ? 1 : 0);
 }
@@ -1108,13 +1120,13 @@ void CWebDbgApp::OnAppPipe()
 {
 	CPipeDlg dlg;
 	int nItem = m_strPipeName.ReverseFind(_T('\\'));
-	CString strPipeName = m_strPipeName.Right(m_strPipeName.GetLength()-nItem-1);
+	CString strPipeName = m_strPipeName.Right(m_strPipeName.GetLength() - nItem - 1);
 	dlg.m_PipeName = strPipeName;
-	int nRet = dlg.DoModal();
+	INT_PTR nRet = dlg.DoModal();
 	if (nRet == IDOK)
 	{
 		// update the pipe name
-		if ((dlg.m_PipeName.GetLength()) && (dlg.m_PipeName.GetLength() < MAX_PATH-10))
+		if ((dlg.m_PipeName.GetLength()) && (dlg.m_PipeName.GetLength() < MAX_PATH - 10))
 		{
 			CString strNewPipeName(dlg.m_PipeName);
 			strNewPipeName.MakeLower();
@@ -1140,49 +1152,49 @@ void CWebDbgApp::OnAppPipe()
 	}
 }
 
-typedef BOOL (__stdcall *PFNEDITSECURITY)(HWND, LPSECURITYINFO);
+typedef BOOL(__stdcall *PFNEDITSECURITY)(HWND, LPSECURITYINFO);
 
 void CWebDbgApp::OnAppPermissions()
 {
 #pragma warning(suppress:6321)	// relative path warning OK for constant
-        HMODULE hDll = LoadLibrary(_T("aclui.dll"));
+	HMODULE hDll = LoadLibrary(_T("aclui.dll"));
 	if (hDll == NULL)
 	{
 		AfxMessageBox(IDS_ACLUI_REQUIRED, MB_ICONEXCLAMATION);
 		return;
 	}
 
-	PFNEDITSECURITY pfnEditSecurity = (PFNEDITSECURITY) GetProcAddress(hDll, "EditSecurity");
+	PFNEDITSECURITY pfnEditSecurity = (PFNEDITSECURITY)GetProcAddress(hDll, "EditSecurity");
 	if (!pfnEditSecurity)
 	{
 		FreeLibrary(hDll);
 		AfxMessageBox(IDS_ACLUI_REQUIRED, MB_ICONEXCLAMATION);
 		return;
 	}
-	
+
 	// turn of the pipe thread
 	QuitPipeThread();
 
 	do
 	{
 
-                CComObjectNoLock<CPipeSecurityInformation> *psecInfo = new CComObjectNoLock<CPipeSecurityInformation>();
+		CComObjectNoLock<CPipeSecurityInformation> *psecInfo = new CComObjectNoLock<CPipeSecurityInformation>();
 		ATLENSURE(psecInfo != NULL);
 		psecInfo->AddRef();
 		HRESULT hr = psecInfo->Init(m_hPipe, CT2W(GetPipeName()));
 		if (FAILED(hr))
 		{
 			LPVOID lpMsgBuf;
-			if (FormatMessage( 
-				FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-				FORMAT_MESSAGE_FROM_SYSTEM | 
+			if (FormatMessage(
+				FORMAT_MESSAGE_ALLOCATE_BUFFER |
+				FORMAT_MESSAGE_FROM_SYSTEM |
 				FORMAT_MESSAGE_IGNORE_INSERTS,
 				NULL,
 				hr,
 				MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-				(LPTSTR) &lpMsgBuf,
+				(LPTSTR)&lpMsgBuf,
 				0,
-				NULL 
+				NULL
 			) != 0)
 			{
 				// Process any inserts in lpMsgBuf.
@@ -1190,7 +1202,7 @@ void CWebDbgApp::OnAppPermissions()
 				// Display the string.
 				AfxMessageBox((LPCTSTR)lpMsgBuf, NULL, MB_ICONSTOP);
 				// Free the buffer.
-				LocalFree( lpMsgBuf );
+				LocalFree(lpMsgBuf);
 			}
 			else
 				AfxMessageBox(IDS_UNKNOWN_ERROR, MB_ICONSTOP);
@@ -1213,7 +1225,7 @@ void CWebDbgApp::OnAppPermissions()
 
 		hr = TestAccessToPipe();
 		psecInfo->Release();
-		delete psecInfo;
+		//delete psecInfo;
 
 		if (hr == E_ACCESSDENIED)
 		{
@@ -1240,7 +1252,7 @@ HRESULT CWebDbgApp::TestAccessToPipe()
 	HRESULT hr = S_OK;
 	HANDLE hPipe = CreateFile(m_strPipeName, GENERIC_WRITE | GENERIC_READ,
 		FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
-		
+
 	if (hPipe == INVALID_HANDLE_VALUE)
 	{
 		DWORD dwError = GetLastError();
@@ -1274,7 +1286,7 @@ HRESULT CWebDbgApp::SendPipeMessage(const DEBUG_SERVER_MESSAGE *pMsg)
 	//Open the pipe for writing
 	HANDLE hPipe = CreateFile(m_strPipeName, GENERIC_WRITE | GENERIC_READ,
 		FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
-		
+
 	if (hPipe == INVALID_HANDLE_VALUE)
 	{
 		hr = AtlHresultFromLastError();
@@ -1288,8 +1300,8 @@ HRESULT CWebDbgApp::SendPipeMessage(const DEBUG_SERVER_MESSAGE *pMsg)
 		else
 		{
 			if (!WriteFile(hPipe, pMsg, sizeof(DEBUG_SERVER_MESSAGE), &dwWritten, NULL) ||
-					dwWritten != sizeof(DEBUG_SERVER_MESSAGE))
-			hr = AtlHresultFromLastError();
+				dwWritten != sizeof(DEBUG_SERVER_MESSAGE))
+				hr = AtlHresultFromLastError();
 			DisconnectNamedPipe(hPipe);
 		}
 

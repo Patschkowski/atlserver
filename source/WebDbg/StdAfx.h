@@ -12,9 +12,13 @@
 
 #pragma once
 
+#if 0
 #define WINVER 0x0400
 #define _WIN32_WINNT 0x0403
 #define _WIN32_IE 0x0401
+#else
+#include <sdkddkver.h>
+#endif
 
 #define VC_EXTRALEAN		// Exclude rarely-used stuff from Windows headers
 
@@ -34,7 +38,8 @@
 #include <atlcom.h>
 #include <aclapi.h>
 #include <atlutil.h>
-#include <atlrx.h>
+
+#include "atlrx.h"
 
 
 //{{AFX_INSERT_LOCATION}}
